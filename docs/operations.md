@@ -21,8 +21,8 @@ Results carry `motion_success` and `task_success`. Motion execution alone does n
 2. Real, supervised: identify devices and ratings; read joint state; verify each direction and limit slowly; test cutoff and stop; preserve offsets.
 3. Camera: fresh frame and ≤10 mm independent table calibration after restart.
 4. Vision: replay and live named/unseen object detection; reject ambiguity and outage.
-5. Full fake-hardware command path through OpenClaw, gateway and ROS; stop and lease-loss cases.
-6. Real known-location pick; then Kendra-invoked look, pick, visual verification and place. Only then try the three spoken requests.
-7. Record local leader demonstrations and train SmolVLA separately. Keep trained-policy evaluation out of Kendra's spoken flow. Supervise ten first-attempt picks of held-out eligible objects; promotion threshold is at least eight verified successes and zero unsafe commands.
+5. Full fake-hardware command path through the optional OpenClaw assistant, local gateway and ROS; stop and lease-loss cases.
+6. Real known-location pick; then assistant-requested look, pick, visual verification and place. Only then try spoken requests.
+7. Record local leader demonstrations and train SmolVLA separately. Keep trained-policy evaluation out of the spoken-command flow. Supervise ten first-attempt picks of held-out eligible objects; promotion threshold is at least eight verified successes and zero unsafe commands.
 
 If a gate fails, disable the real service and return to the last passing stage. Keep camera frames, logs, calibration, local datasets and checkpoints outside this repository.

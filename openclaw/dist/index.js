@@ -29,7 +29,7 @@ async function call(method, params, signal) {
 const xyz = { x: Type.Number(), y: Type.Number(), z: Type.Number() };
 export default defineToolPlugin({
     id: "kendra-so-arm101-tools",
-    name: "Kendra SO-ARM101 Tools",
+    name: "SO-ARM101 Robot Tools",
     description: "Safety-gated loopback robot tools.",
     tools: (tool) => [
         tool({ name: "robot_status", description: "Check robot readiness and motion mode.",

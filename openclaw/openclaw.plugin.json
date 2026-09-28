@@ -1,6 +1,6 @@
 {
   "id": "kendra-so-arm101-tools",
-  "name": "Kendra SO-ARM101 Tools",
+  "name": "SO-ARM101 Robot Tools",
   "description": "Safety-gated loopback robot tools.",
   "version": "0.1.0",
   "configSchema": {

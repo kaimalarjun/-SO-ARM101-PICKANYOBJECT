@@ -1,6 +1,6 @@
 # Hardware inventory and power gate
 
-Use this checklist beside the actual hardware before opening any follower port.
+The **follower** is the arm that picks objects. An optional **leader** is a second arm moved by hand to record demonstrations. Use this checklist beside the actual hardware before opening the follower's USB port.
 
 1. Record the follower and leader controller model, servo count and labels, motor IDs, mechanical assembly, gripper orientation and observed end stops in a private operator log.
 2. Read the **actual** power-adapter label and controller input rating. Do not infer voltage from a product listing. Confirm polarity and connector fit before connection.

@@ -1,0 +1,14 @@
+[Unit]
+Description=SO-101 ROS controller and MoveIt (mock by default)
+After=network.target
+
+[Service]
+Type=simple
+User=REPLACE_OPERATOR
+Environment=ROBOT_WS=/home/REPLACE_OPERATOR/so101_ws
+ExecStart=/bin/bash -lc 'source /opt/ros/jazzy/setup.bash; source "$ROBOT_WS/install/setup.bash"; exec ros2 launch kendra_robot bringup.launch.py repo_path:=/opt/kendra-robot mode:=mock operator_enabled:=false'
+Restart=on-failure
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

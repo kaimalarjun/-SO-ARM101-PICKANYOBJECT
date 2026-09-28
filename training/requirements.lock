@@ -1,0 +1,2 @@
+# Install in a separate venv on the training host; validate GPU wheel selection.
+lerobot==0.6.1

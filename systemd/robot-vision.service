@@ -1,0 +1,13 @@
+[Unit]
+Description=Private robot vision inference
+After=network.target
+
+[Service]
+Type=simple
+User=REPLACE_OPERATOR
+ExecStart=/home/REPLACE_OPERATOR/.local/share/kendra-robot-vision/venv/bin/python /opt/kendra-robot/vision/service.py --host 127.0.0.1 --port 8766
+Restart=on-failure
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,56 @@
+{
+  "id": "kendra-so-arm101-tools",
+  "name": "Kendra SO-ARM101 Tools",
+  "description": "Safety-gated loopback robot tools.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "robot_status",
+      "robot_look",
+      "robot_home",
+      "robot_stop",
+      "robot_open_gripper",
+      "robot_close_gripper",
+      "robot_move_to",
+      "robot_pick",
+      "robot_place"
+    ]
+  },
+  "toolMetadata": {
+    "robot_status": {
+      "optional": true
+    },
+    "robot_look": {
+      "optional": true
+    },
+    "robot_home": {
+      "optional": true
+    },
+    "robot_stop": {
+      "optional": true
+    },
+    "robot_open_gripper": {
+      "optional": true
+    },
+    "robot_close_gripper": {
+      "optional": true
+    },
+    "robot_move_to": {
+      "optional": true
+    },
+    "robot_pick": {
+      "optional": true
+    },
+    "robot_place": {
+      "optional": true
+    }
+  }
+}

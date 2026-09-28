@@ -1,0 +1,15 @@
+[Unit]
+Description=Private SSH tunnel to vision host
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=REPLACE_OPERATOR
+ExecStart=/usr/bin/ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -L 127.0.0.1:8766:127.0.0.1:8766 REPLACE_VISION_SSH_ALIAS
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

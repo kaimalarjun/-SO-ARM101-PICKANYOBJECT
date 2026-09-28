@@ -5,7 +5,6 @@
   <description>Safety-gated SO-ARM101 gateway and calibration</description>
   <maintainer email="noreply@users.noreply.github.com">Kendra robot contributors</maintainer>
   <license>Apache-2.0</license>
-  <buildtool_depend>ament_python</buildtool_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>action_msgs</exec_depend>

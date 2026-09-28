@@ -41,6 +41,10 @@ for item in 'ros2_so_arm e166df9d51f43b24da9b99047c6c51c306bda74f' \
 done
 ln -sfn "$repo/ros" "$workspace/src/kendra_robot"
 cd "$workspace"
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install
+rosdep install --from-paths \
+  src/kendra_robot src/ros2_so_arm/so_arm101_description \
+  src/ros2_so_arm/so_arm_utils src/feetech_ros2_driver \
+  --ignore-src -r -y
+colcon build --symlink-install --packages-up-to \
+  kendra_robot so_arm101_description feetech_ros2_driver
 echo 'Installed ROS and built workspace. Launch remains mock-only by default.'

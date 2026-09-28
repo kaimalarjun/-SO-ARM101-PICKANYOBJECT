@@ -1,15 +1,15 @@
 planning_pipelines: [ompl]
 default_planning_pipeline: ompl
 ompl:
-  planning_plugin: ompl_interface/OMPLPlanner
-  request_adapters: >-
-    default_planning_request_adapters/ResolveConstraintFrames
-    default_planning_request_adapters/ValidateWorkspaceBounds
-    default_planning_request_adapters/CheckStartStateBounds
-    default_planning_request_adapters/CheckStartStateCollision
-  response_adapters: >-
-    default_planning_response_adapters/AddTimeOptimalParameterization
-    default_planning_response_adapters/ValidateSolution
+  planning_plugins: [ompl_interface/OMPLPlanner]
+  request_adapters:
+    - default_planning_request_adapters/ResolveConstraintFrames
+    - default_planning_request_adapters/ValidateWorkspaceBounds
+    - default_planning_request_adapters/CheckStartStateBounds
+    - default_planning_request_adapters/CheckStartStateCollision
+  response_adapters:
+    - default_planning_response_adapters/AddTimeOptimalParameterization
+    - default_planning_response_adapters/ValidateSolution
   planner_configs:
     RRTConnect:
       type: geometric::RRTConnect

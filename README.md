@@ -13,7 +13,7 @@ The initial object envelope is small, rigid, isolated objects on a flat contrast
 1. Inspect both arms, servo/controller labels, adapter ratings and follower power cutoff. See [hardware](docs/hardware.md).
 2. On Ubuntu 24.04, run `bash scripts/preflight.sh`, then `bash scripts/install_robot_host.sh`. The script requests sudo for ROS packages. External ROS checkouts are pinned in `sources.repos`.
 3. Copy `config/*.example.yaml` to a **restricted host-local** directory such as `/var/lib/kendra-robot`, replace every placeholder with measured values, and keep `mode: mock` and `operator_enabled: false`.
-4. Source `/opt/ros/jazzy/setup.bash` and the workspace `install/setup.bash`. Start `ros2 launch kendra_robot bringup.launch.py repo_path:=$PWD mode:=mock`. Start `kendra-robot-gateway --robot /var/lib/kendra-robot/robot.yaml`.
+4. Source `/opt/ros/jazzy/setup.bash` and the workspace `install/setup.bash`. Start `ros2 launch kendra_robot bringup.launch.py repo_path:=$PWD mode:=mock`. Start `ros2 run kendra_robot kendra-robot-gateway --robot /var/lib/kendra-robot/robot.yaml`.
 5. Exercise `curl -s http://127.0.0.1:8765/health` and the mock tests below. Do not connect follower power during mock testing.
 6. Mount the overhead camera, calibrate with independent points, and validate no more than 10 mm table error. See [calibration](docs/calibration.md).
 7. Install the isolated vision service with `scripts/install_vision_host.sh` on the vision host. Bind its HTTP listener to `127.0.0.1`; use only a private SSH tunnel from the robot host.

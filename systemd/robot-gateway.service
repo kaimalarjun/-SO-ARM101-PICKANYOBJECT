@@ -6,7 +6,7 @@ Requires=robot-ros.service
 [Service]
 Type=simple
 User=REPLACE_OPERATOR
-ExecStart=/bin/bash -lc 'source /opt/ros/jazzy/setup.bash; source /home/REPLACE_OPERATOR/so101_ws/install/setup.bash; exec kendra-robot-gateway --repo-path /opt/kendra-robot --robot /var/lib/kendra-robot/robot.yaml --camera /var/lib/kendra-robot/camera.yaml --vision /var/lib/kendra-robot/vision.yaml'
+ExecStart=/bin/bash -lc 'source /opt/ros/jazzy/setup.bash; source /home/REPLACE_OPERATOR/so101_ws/install/setup.bash; exec ros2 run kendra_robot kendra-robot-gateway --repo-path /opt/kendra-robot --robot /var/lib/kendra-robot/robot.yaml --camera /var/lib/kendra-robot/camera.yaml --vision /var/lib/kendra-robot/vision.yaml'
 Restart=on-failure
 NoNewPrivileges=true
 ProtectSystem=strict

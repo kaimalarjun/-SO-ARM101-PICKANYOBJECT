@@ -27,7 +27,10 @@ sudo apt-get install -y ros-jazzy-ros-base ros-jazzy-rviz2 ros-jazzy-ros2-contro
 if [[ ! -d /etc/ros/rosdep/sources.list.d ]]; then sudo rosdep init; fi
 rosdep update
 mkdir -p "$workspace/src"
+# ROS setup scripts reference optional variables that are unset under `set -u`.
+set +u
 source /opt/ros/jazzy/setup.bash
+set -u
 vcs import --skip-existing "$workspace/src" < "$repo/sources.repos"
 # Verify existing checkouts rather than silently drifting from the published pins.
 for item in 'ros2_so_arm e166df9d51f43b24da9b99047c6c51c306bda74f' \

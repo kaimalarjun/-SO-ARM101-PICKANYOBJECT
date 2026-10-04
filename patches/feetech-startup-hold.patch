@@ -1,0 +1,48 @@
+diff --git a/src/feetech_ros2_driver.cpp b/src/feetech_ros2_driver.cpp
+index af7ecd7..a9c03f8 100644
+--- a/src/feetech_ros2_driver.cpp
++++ b/src/feetech_ros2_driver.cpp
+@@ -194,13 +194,7 @@ CallbackReturn FeetechHardwareInterface::configure_joints_(const JointIdConfigMa
+       return CallbackReturn::ERROR;
+     }
+ 
+-    // Only enable torque for joints with command interfaces (Follower Arm)
+-    if (!joint.command_interfaces.empty()) {
+-      if (const auto result = communication_protocol_->set_torque(joint_ids_[i], true); !result) {
+-        spdlog::error("FeetechHardwareInterface::configure_joints_ set_torque -> {}", result.error());
+-        return CallbackReturn::ERROR;
+-      }
+-    }
++    // Leave torque disabled until activation seeds a current-position hold target.
+   }
+ 
+   return CallbackReturn::SUCCESS;
+@@ -306,10 +300,25 @@ hardware_interface::return_type FeetechHardwareInterface::write(const rclcpp::Ti
+ }
+ 
+ CallbackReturn FeetechHardwareInterface::on_activate(const rclcpp_lifecycle::State& /* previous_state */) {
+-  // Time/Duration are not used
+-  read(rclcpp::Time{}, rclcpp::Duration::from_seconds(0));
+-  // Set the initial command to current joint positions
++  // Keep torque off until fresh feedback and a current-position hold target exist.
++  const auto now = rclcpp::Time{};
++  const auto period = rclcpp::Duration::from_seconds(0);
++  if (read(now, period) != hardware_interface::return_type::OK) {
++    return CallbackReturn::ERROR;
++  }
+   hw_positions_ = state_hw_positions_;
++  if (write(now, period) != hardware_interface::return_type::OK) {
++    return CallbackReturn::ERROR;
++  }
++  for (size_t i = 0; i < info_.joints.size(); ++i) {
++    if (!info_.joints[i].command_interfaces.empty()) {
++      if (const auto result = communication_protocol_->set_torque(joint_ids_[i], true); !result) {
++        spdlog::error("FeetechHardwareInterface::on_activate set_torque -> {}", result.error());
++        on_deactivate(rclcpp_lifecycle::State{});
++        return CallbackReturn::ERROR;
++      }
++    }
++  }
+   return CallbackReturn::SUCCESS;
+ }
+ 

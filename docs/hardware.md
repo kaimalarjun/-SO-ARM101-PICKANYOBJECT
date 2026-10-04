@@ -24,4 +24,6 @@ Install the optional helper with `bash scripts/install_calibration_helper.sh`. W
 
 The installer applies a small patch that increases the pinned Feetech serial read timeout from 5 ms to 20 ms. This gives USB transfers more time to complete; a failed read still stops control. A passive hold test does not establish reliability while both cameras are streaming.
 
+A second patch keeps torque off during driver setup. Activation must read fresh joint positions and write a hold target at those positions before enabling torque. A failed read or write aborts activation. This avoids enabling torque against an old motor target after manual calibration.
+
 Real motion is withheld until the operator has measured workspace bounds, verified a working physical cutoff, tested stop behavior, and authorized the first powered movement. Use slow single-joint tests with no object before any Cartesian pick. Stop at once on unexpected direction, heat, collision, or missing feedback.

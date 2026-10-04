@@ -42,12 +42,14 @@ done
 # The pinned Feetech driver uses a 5 ms serial read timeout. A short USB
 # scheduling delay can otherwise deactivate the controller on one missed read.
 driver_dir="$workspace/src/feetech_ros2_driver"
-driver_patch="$repo/patches/feetech-serial-timeout.patch"
-if git -C "$driver_dir" apply --check "$driver_patch"; then
-  git -C "$driver_dir" apply "$driver_patch"
-elif ! git -C "$driver_dir" apply --reverse --check "$driver_patch"; then
-  echo 'Feetech timeout patch cannot be applied or verified' >&2; exit 5
-fi
+for driver_patch in "$repo/patches/feetech-serial-timeout.patch" \
+                    "$repo/patches/feetech-startup-hold.patch"; do
+  if git -C "$driver_dir" apply --check "$driver_patch"; then
+    git -C "$driver_dir" apply "$driver_patch"
+  elif ! git -C "$driver_dir" apply --reverse --check "$driver_patch"; then
+    echo "Feetech patch cannot be applied or verified: $driver_patch" >&2; exit 5
+  fi
+done
 ln -sfn "$repo/ros" "$workspace/src/kendra_robot"
 cd "$workspace"
 rosdep install --from-paths \

@@ -10,6 +10,8 @@ The **follower** is the arm that picks objects. An optional **leader** is a seco
 6. Save factory offsets and controller settings privately before calibration. Do not launch ROS in `real` mode just to identify a port: the Feetech driver changes torque state and may write servo parameters when it starts.
 7. With power off, run `scripts/preflight.sh`. Then launch mock hardware and verify the joint ordering, base frame, gripper direction and MoveIt collision model in RViz.
 
+Once the arm is clamped, the supply label is checked, and the operator is at the power cutoff, run `bash scripts/servo_inventory.sh /dev/serial/by-id/DEVICE` using the follower's stable USB path. This utility reads servo IDs 1–6, model numbers, present positions, stored homing offsets, and range limits. It sends no torque or position commands. Keep the output with private hardware notes; do not reset or overwrite existing offsets just because they are nonzero.
+
 ## Seeed Studio setup guide
 
 Use the [Seeed SO-ARM100/101 guide](https://wiki.seeedstudio.com/lerobot_so100m_new/) here only for kit identification, servo labels and power ratings. This project uses ROS 2 to control the follower; do not run the guide's LeRobot motor setup, calibration or teleoperation commands during ROS bringup. A preassembled kit should not need servo ID and baud-rate setup. Check the actual adapter and motor labels: the Standard kit uses 5 V for both arms, while the Pro kit uses 5 V for the leader and 12 V for the follower.

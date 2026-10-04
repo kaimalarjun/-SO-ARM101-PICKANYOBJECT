@@ -12,8 +12,8 @@ The **follower** is the arm that picks objects. An optional **leader** is a seco
 
 ## Seeed Studio setup guide
 
-The [Seeed SO-ARM100/101 guide](https://wiki.seeedstudio.com/lerobot_so100m_new/) is useful for checking the kit variant, servo labels and manual calibration. It says a preassembled kit can skip `lerobot-setup-motors`; that command changes servo IDs and baud rates. Check the actual adapter and motor labels: the Standard kit uses 5 V for both arms, while the Pro kit uses 5 V for the leader and 12 V for the follower.
+Use the [Seeed SO-ARM100/101 guide](https://wiki.seeedstudio.com/lerobot_so100m_new/) here only for kit identification, servo labels and power ratings. This project uses ROS 2 to control the follower; do not run the guide's LeRobot motor setup, calibration or teleoperation commands during ROS bringup. A preassembled kit should not need servo ID and baud-rate setup. Check the actual adapter and motor labels: the Standard kit uses 5 V for both arms, while the Pro kit uses 5 V for the leader and 12 V for the follower.
 
-Seeed's `lerobot-calibrate` saves LeRobot calibration data; it does not automatically calibrate this ROS driver. At the pinned source revisions, the SO-101 description supplies `offset` values that the Feetech driver ignores. Verify each joint's center, direction and limits, and provide validated ROS-side calibration before launching `mode:=real`. Do not run LeRobot teleoperation and ROS against the follower USB bus at the same time.
+At the pinned source revisions, the SO-101 description supplies `offset` values that the Feetech driver ignores. Verify each joint's center, direction and limits using a ROS-compatible calibration before launching `mode:=real`. LeRobot is reserved for the separate, optional training stage and never opens the follower while ROS owns it.
 
 Real motion is withheld until the operator has measured workspace bounds, verified a working physical cutoff, tested stop behavior, and authorized the first powered movement. Use slow single-joint tests with no object before any Cartesian pick. Stop at once on unexpected direction, heat, collision, or missing feedback.

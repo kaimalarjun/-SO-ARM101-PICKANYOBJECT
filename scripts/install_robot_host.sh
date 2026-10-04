@@ -23,7 +23,7 @@ sudo apt-get install -y ros-jazzy-ros-base ros-jazzy-rviz2 ros-jazzy-ros2-contro
   ros-jazzy-ros2-controllers ros-jazzy-moveit ros-jazzy-moveit-py \
   ros-jazzy-usb-cam ros-jazzy-xacro ros-jazzy-nav2-common ros-jazzy-cv-bridge \
   python3-colcon-common-extensions python3-vcstool python3-rosdep \
-  python3-opencv python3-yaml python3-pytest
+  python3-opencv python3-yaml python3-pytest python3-venv
 if [[ ! -d /etc/ros/rosdep/sources.list.d ]]; then sudo rosdep init; fi
 rosdep update
 mkdir -p "$workspace/src"
@@ -39,6 +39,15 @@ for item in 'ros2_so_arm e166df9d51f43b24da9b99047c6c51c306bda74f' \
   actual=$(git -C "$workspace/src/$dir" rev-parse HEAD)
   [[ $actual == "$expected" ]] || { echo "$dir is at $actual, expected $expected" >&2; exit 4; }
 done
+# The pinned Feetech driver uses a 5 ms serial read timeout. A short USB
+# scheduling delay can otherwise deactivate the controller on one missed read.
+driver_dir="$workspace/src/feetech_ros2_driver"
+driver_patch="$repo/patches/feetech-serial-timeout.patch"
+if git -C "$driver_dir" apply --check "$driver_patch"; then
+  git -C "$driver_dir" apply "$driver_patch"
+elif ! git -C "$driver_dir" apply --reverse --check "$driver_patch"; then
+  echo 'Feetech timeout patch cannot be applied or verified' >&2; exit 5
+fi
 ln -sfn "$repo/ros" "$workspace/src/kendra_robot"
 cd "$workspace"
 rosdep install --from-paths \

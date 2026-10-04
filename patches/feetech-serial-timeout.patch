@@ -1,0 +1,13 @@
+diff --git a/feetech_driver/include/feetech_driver/serial_port.hpp b/feetech_driver/include/feetech_driver/serial_port.hpp
+index 2b5d5ec..9940641 100644
+--- a/feetech_driver/include/feetech_driver/serial_port.hpp
++++ b/feetech_driver/include/feetech_driver/serial_port.hpp
+@@ -66,7 +66,7 @@ class SerialPort {
+  private:
+   [[nodiscard]] Result check_port() const noexcept;
+   std::string dev_;
+-  std::chrono::milliseconds timeout_ = std::chrono::milliseconds(5);
++  std::chrono::milliseconds timeout_ = std::chrono::milliseconds(20);
+   LibSerial::SerialPort port_;
+ };
+ }  // namespace feetech_driver

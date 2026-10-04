@@ -6,7 +6,7 @@ This project is a test setup for picking small objects from a table with an SO-A
 
 ## What runs where
 
-- **Follower:** the SO-ARM101 arm that moves and picks objects. ROS 2 is the only program that opens its USB controller.
+- **Follower:** the SO-ARM101 arm that moves and picks objects. ROS 2 owns its USB controller during operation. The one-time calibration helper runs separately, with ROS stopped.
 - **Leader:** an optional second arm that a person moves by hand to record demonstrations for later training.
 - **Robot computer:** an Ubuntu 24.04 computer connected to the follower and camera. It runs ROS 2 Jazzy, motion planning, and a small local HTTP service called the *gateway*.
 - **Vision computer:** an optional second computer for describing images and locating objects. It can run Qwen3.5-4B and Grounding DINO Tiny; the robot computer connects to it privately.
@@ -42,7 +42,7 @@ The installer needs `sudo` for Ubuntu packages. The ROS source versions are pinn
 
 ## Add hardware and optional features
 
-1. Before powering the follower, check its controller and adapter labels, mounting, and physical power cutoff. See [hardware setup](docs/hardware.md) and [supervised operation](docs/operations.md).
+1. Before powering the follower, check its controller and adapter labels, mounting, and physical power cutoff. Back up its settings and calibrate it before motion. See [hardware setup](docs/hardware.md) and [supervised operation](docs/operations.md).
 2. Mount the camera overhead and measure its coordinates relative to the robot. Store calibration outside Git and check table position error is at most 10 mm. See [camera calibration](docs/calibration.md).
 3. For object recognition, run `scripts/install_vision_host.sh` on a vision computer and connect its local service to the robot computer through a private tunnel.
 4. If using OpenClaw, build the plugin in `openclaw/` and enable its robot tools only for the assistant you choose. The gateway listens on `127.0.0.1`, not a public network address.

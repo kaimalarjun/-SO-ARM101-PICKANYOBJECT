@@ -10,4 +10,10 @@ The **follower** is the arm that picks objects. An optional **leader** is a seco
 6. Save factory offsets and controller settings privately before calibration. Do not launch ROS in `real` mode just to identify a port: the Feetech driver changes torque state and may write servo parameters when it starts.
 7. With power off, run `scripts/preflight.sh`. Then launch mock hardware and verify the joint ordering, base frame, gripper direction and MoveIt collision model in RViz.
 
+## Seeed Studio setup guide
+
+The [Seeed SO-ARM100/101 guide](https://wiki.seeedstudio.com/lerobot_so100m_new/) is useful for checking the kit variant, servo labels and manual calibration. It says a preassembled kit can skip `lerobot-setup-motors`; that command changes servo IDs and baud rates. Check the actual adapter and motor labels: the Standard kit uses 5 V for both arms, while the Pro kit uses 5 V for the leader and 12 V for the follower.
+
+Seeed's `lerobot-calibrate` saves LeRobot calibration data; it does not automatically calibrate this ROS driver. At the pinned source revisions, the SO-101 description supplies `offset` values that the Feetech driver ignores. Verify each joint's center, direction and limits, and provide validated ROS-side calibration before launching `mode:=real`. Do not run LeRobot teleoperation and ROS against the follower USB bus at the same time.
+
 Real motion is withheld until the operator has measured workspace bounds, verified a working physical cutoff, tested stop behavior, and authorized the first powered movement. Use slow single-joint tests with no object before any Cartesian pick. Stop at once on unexpected direction, heat, collision, or missing feedback.

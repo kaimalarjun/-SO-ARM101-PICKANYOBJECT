@@ -47,3 +47,37 @@
   lifted off its support. Keep torque-on hold between actions to prevent folding.
 - Keep real poses, calibration, camera recordings, host/device identities, and
   credentials in ignored host-local files. Publish reusable code and generic docs.
+
+## Lessons from observed commissioning failures
+
+- A gripper position goal or a stopped closing motion is not proof of a grasp.
+  Top-rim and end grips can slide or rotate a box, then slip during lifting.
+  Centre the contact along the object, check both jaw tips are beside its sides,
+  and make a small camera-verified lift before transporting it.
+- An open moving jaw can be much higher than the fixed jaw. Seeing one tip below
+  the object's top does not establish two-sided contact. Inspect the closed grasp
+  and fresh camera views; changes in camera viewpoint can resemble object motion.
+- A held object changes the collision footprint. Check its complete underside,
+  corners, and swept volume, not just the claw centre. Raise its lowest point
+  above neighbouring objects before moving across them.
+- A rear placement descent shifted a neighbouring bottle even though the claw
+  centre appeared clear. Treat object displacement/rotation as suspected contact,
+  reject that route, retreat, and increase separation before another descent.
+- Moving farther back cleared the bottle but put part of the box beyond the
+  tabletop edge. Check full support at the destination before release. A clear
+  background or a provisional XYZ height does not prove there is table underneath.
+- A side placement on a supported clear region succeeded after the rear routes
+  failed. Follow the user's latest placement constraint; do not keep pursuing a
+  rejected location after an alternative nearby location is authorized.
+- Held payloads can increase tracking error. Record actual movement and use a
+  revised bounded profile or another joint; do not silently widen tolerances or
+  infer a new mechanical limit from sag. Extra gripper closure during lifting can
+  indicate slipping contact and must trigger inspection of the stopped state.
+- Camera evidence of a hand near the held object requires stationary hold and
+  a fresh clearance check before continuing. Old statements about an empty area
+  do not override current images.
+- After each attempt, append a concise lesson with evidence and its scope to these
+  instructions and update the ignored host-local attempt record. Keep observations
+  separate from hypotheses, record unsuccessful trials honestly, and reuse the
+  lesson when planning the next attempt. This is persistent procedural memory,
+  not automatic model training or a guarantee against recurring failures.

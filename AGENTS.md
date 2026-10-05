@@ -50,6 +50,20 @@
 
 ## Lessons from observed commissioning failures
 
+- Upright bottle attempts closed the jaws successfully but left the bottle on
+  the mat during small lift checks. Some closures pushed or rotated it instead.
+  Image overlap between fingertips and body does not prove contact at the same
+  depth. Reacquire a displaced bottle, inspect both opposed contacts, and change
+  the approach orientation after repeated misses. Do not keep nudging it toward
+  a table edge or compensate by exceeding the recorded gripper travel.
+- Calculate commissioning duration from the largest measured joint delta and
+  the configured peak-speed bound, including gripper moves. A rejected duration
+  sends no motion; correct timing without widening the speed bound.
+- Even empty-arm coordinated retreats showed small shoulder/elbow undertravel.
+  Use measured final poses for subsequent localization and planning. Record the
+  error and inspect clearance; a rejected completion result does not mean the
+  arm stayed at its starting pose.
+
 - A gripper position goal or a stopped closing motion is not proof of a grasp.
   Top-rim and end grips can slide or rotate a box, then slip during lifting.
   Centre the contact along the object, check both jaw tips are beside its sides,

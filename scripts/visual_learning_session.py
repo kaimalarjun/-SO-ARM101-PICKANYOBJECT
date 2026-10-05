@@ -158,11 +158,13 @@ class Session:
                 tmp=self.args.telemetry.with_suffix('.tmp');tmp.write_text(json.dumps(data));tmp.replace(self.args.telemetry)
             time.sleep(.1)
 
-    def step(self, joint=None, delta=None, deltas=None):
+    def step(self, joint=None, delta=None, deltas=None, duration=1.5, coordinated=False):
         deltas = deltas if deltas is not None else {joint: delta}
         deltas = {n: float(v) for n, v in deltas.items()}
-        if not deltas or any(n not in JOINTS or not math.isfinite(v) or abs(v)>0.12 for n,v in deltas.items()):
+        if not deltas or any(n not in JOINTS or not math.isfinite(v) or abs(v)>(2.3 if coordinated else .12) for n,v in deltas.items()):
             raise ValueError('Each joint step must be finite and at most 0.12 rad')
+        if not math.isfinite(duration) or not 1.5<=duration<=8 or (coordinated and max(abs(v) for v in deltas.values())*1.875/duration>.7):
+            raise ValueError('Trajectory duration or peak speed outside commissioning bounds')
         if 'gripper_joint' in deltas and len(deltas)>1:
             raise ValueError('Gripper moves separately from the arm')
         joint = next(iter(deltas))
@@ -184,7 +186,7 @@ class Session:
                 ticks=round(desired[n]*4096/(2*math.pi))+2048
                 if not cal['range_min']<=ticks<=cal['range_max']:
                     raise RuntimeError('Target outside measured travel: '+n)
-            for fraction in np.linspace(0,1,16):
+            for fraction in np.linspace(0,1,100):
                 intermediate={n:start[n]+fraction*(desired[n]-start[n]) for n in JOINTS}
                 predicted=claw_position(self.model,self.model_positions(intermediate))
                 if joint!='gripper_joint' and predicted['z']<self.args.minimum_claw_height:
@@ -201,7 +203,7 @@ class Session:
                 goal.trajectory.joint_names=JOINTS[:-1]
                 point=JointTrajectoryPoint();point.positions=[desired[n] for n in JOINTS[:-1]]
                 point.velocities=[0.0]*5;point.accelerations=[0.0]*5
-                point.time_from_start.sec=1;point.time_from_start.nanosec=500000000
+                point.time_from_start.sec=int(duration);point.time_from_start.nanosec=int((duration-int(duration))*1e9)
                 initial_point=JointTrajectoryPoint()
                 initial_point.positions=[start[n] for n in JOINTS[:-1]]
                 initial_point.velocities=[0.0]*5;initial_point.accelerations=[0.0]*5
@@ -211,7 +213,7 @@ class Session:
                 goal.goal_time_tolerance.sec=1
             handle=self.wait(client.send_goal_async(goal),.75)
             if not handle.accepted:raise RuntimeError('Goal rejected')
-            self.active=handle;self.command_deadline=time.monotonic()+3;self.trace=[]
+            self.active=handle;self.command_deadline=time.monotonic()+duration+1.5;self.trace=[]
             pending=handle.get_result_async()
             while not pending.done() and time.monotonic()<self.command_deadline:
                 if not self.fresh() or any(abs(self.positions[n]-start[n])>.04 for n in JOINTS if n not in deltas):
@@ -269,9 +271,13 @@ def main():
         def do_POST(self):
             try:
                 if self.path=='/stop':session.cancel();self.reply(session.state());return
-                if self.path!='/step':self.reply({'error':'Unknown command'},404);return
+                if self.path not in ('/step','/pose'):self.reply({'error':'Unknown command'},404);return
                 data=json.loads(self.rfile.read(int(self.headers.get('Content-Length','0'))))
-                self.reply(session.step(data.get('joint'),data.get('delta'),data.get('deltas')))
+                if self.path=='/pose':
+                    session.ready()
+                    deltas={n:float(v)-session.positions[n] for n,v in data['positions'].items()}
+                    self.reply(session.step(deltas=deltas,duration=float(data['duration']),coordinated=True))
+                else:self.reply(session.step(data.get('joint'),data.get('delta'),data.get('deltas')))
             except Exception as error:self.reply({'error':str(error),**session.state()},409)
         def log_message(self,*_):pass
     server=ThreadingHTTPServer(('127.0.0.1',args.port),Handler)

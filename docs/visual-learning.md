@@ -99,3 +99,19 @@ requested and measured positions, direction, complete pose, and evidence directo
 These are provisional limits for that load and pose. They do not overwrite motor
 calibration: a payload, contact, or weak tracking can all cause undertravel. Inspect
 the feedback trace and camera evidence before classifying a mechanical limit.
+
+## Timed coordinated poses
+
+The commissioning session also accepts `/pose` with `positions` (a mapping of
+joint names to absolute ROS radians) and `duration` in seconds. The existing
+`/step` endpoint retains its 0.12 radian bound. Coordinated poses allow at most
+2.3 radians per joint and 1.5–8 seconds, with a calculated quintic peak speed no
+higher than 0.7 radians/second. All encoder travel checks remain active. The
+interpolated path is sampled at 100 points for the provisional claw-height guard.
+Use only previously observed clear routes; this is not a collision planner.
+
+Time the complete pick and release/return phases with a monotonic clock, including
+camera capture and feedback checks. Save views at original pose, lift, release,
+and return for every cycle. A close action that stalls is only possible contact;
+verify the airborne box in the saved views before counting a cycle. Three fast
+commands alone do not establish three successful picks.

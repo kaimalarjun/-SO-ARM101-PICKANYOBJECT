@@ -50,6 +50,12 @@
 
 ## Lessons from observed commissioning failures
 
+- Before a grasp, explicitly locate the object's middle, its narrow dimension,
+  and both fingertip positions. Use `scripts/grasp_alignment.py` for image-only
+  alignment and bounded suggestions from measured local camera response. A clipped
+  target or unreliable silhouette requires another clear view. Confirm opposed
+  contact depth separately; an aligned overlay cannot authorize closing or motion.
+
 - Continue adapting the pickup position after a displaced object or failed grasp.
   Reacquire it, change the approach based on measured camera response, and retry
   while feedback and clearance remain valid. Do not require the object to return

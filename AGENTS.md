@@ -50,6 +50,12 @@
 
 ## Lessons from observed commissioning failures
 
+- A deep side-facing descent showed shoulder undertravel and a visible tilt of
+  the base relative to the table. A small reverse movement succeeded, but the
+  tilt remained. Treat this as a possible mounting shift: hold, request physical
+  inspection, and revalidate the base reference before further motion. Joint
+  feedback alone cannot detect a loose mount or validate saved world coordinates.
+
 - Upright bottle attempts closed the jaws successfully but left the bottle on
   the mat during small lift checks. Some closures pushed or rotated it instead.
   Image overlap between fingertips and body does not prove contact at the same

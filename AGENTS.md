@@ -50,6 +50,13 @@
 
 ## Lessons from observed commissioning failures
 
+- A box retry achieved a verified lift after centering its complete silhouette,
+  correcting reach and pan together while clear, and lowering with coupled
+  shoulder/wrist motion before closing. The gripper stopped at body contact;
+  fresh external and wrist images confirmed retention before release onto the mat.
+  Record complete elapsed time honestly: this successful retry exceeded its timed
+  target. Re-localize after release because the box moved while landing.
+
 - Before a grasp, explicitly locate the object's middle, its narrow dimension,
   and both fingertip positions. Use `scripts/grasp_alignment.py` for image-only
   alignment and bounded suggestions from measured local camera response. A clipped

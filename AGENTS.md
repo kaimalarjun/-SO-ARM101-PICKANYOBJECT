@@ -50,6 +50,13 @@
 
 ## Lessons from observed commissioning failures
 
+- After a scene reset, a simultaneous pan and height-changing approach tipped
+  an upright bottle before grasping. The exact contact point was uncertain;
+  include the wrist camera, controller board, and cables in clearance checks.
+  First raise at the existing pan, inspect clearance, then transfer horizontally.
+  A reset does not validate a diagonal swept path. Record the failed timed
+  attempt and re-localize the fallen object before attempting recovery.
+
 - A deep side-facing descent showed shoulder undertravel and a visible tilt of
   the base relative to the table. A small reverse movement succeeded, but the
   tilt remained. Treat this as a possible mounting shift: hold, request physical

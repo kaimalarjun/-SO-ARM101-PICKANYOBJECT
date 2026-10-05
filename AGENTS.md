@@ -50,6 +50,20 @@
 
 ## Lessons from observed commissioning failures
 
+- For a toppled bottle, reacquire its body axis and rotate clear of the table
+  so the jaws approach across the body, rather than along the cap/body axis.
+  Neck or surface contacts can roll it without retaining it. Repeated small
+  lift checks in this scene failed even after firmer closure; do not treat a
+  plausible two-dimensional jaw overlap as a verified opposed grasp.
+- A wrist rotation request under-travelled substantially in one unloaded pose.
+  Record this as a contextual limit and investigate its
+  cause; do not force it or treat the full encoder range as usable travel.
+  An alternate orientation was reached by raising first and rotating the
+  opposite way. Its successful motion did not establish a successful grasp.
+- A forward correction displaced a fallen bottle. Re-localize after every
+  contact and account for rolling; stop sideways nudges as table support becomes
+  uncertain. If a person enters the movement area, hold and inspect a fresh view.
+
 - After a scene reset, a simultaneous pan and height-changing approach tipped
   an upright bottle before grasping. The exact contact point was uncertain;
   include the wrist camera, controller board, and cables in clearance checks.

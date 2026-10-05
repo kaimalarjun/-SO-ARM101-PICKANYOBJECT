@@ -50,6 +50,19 @@
 
 ## Lessons from observed commissioning failures
 
+- Continue adapting the pickup position after a displaced object or failed grasp.
+  Reacquire it, change the approach based on measured camera response, and retry
+  while feedback and clearance remain valid. Do not require the object to return
+  to a saved location or repeat an unchanged failed approach.
+- A fallen bottle was successfully lifted after changing wrist rotation to grasp
+  across its width, correcting reach and pan while clear, and descending in small
+  shoulder/wrist steps that approximately preserved pitch. The closing gripper
+  stopped against the body before its requested target; a short lift followed by
+  a second lift confirmed retention without adding squeeze. Save the measured
+  pose privately as a scene-specific hint, then re-localize before reuse.
+- A phone hidden behind the bottle appeared during descent. Check both views
+  again before closing; an earlier clear view can miss an occluded obstacle.
+
 - For a toppled bottle, reacquire its body axis and rotate clear of the table
   so the jaws approach across the body, rather than along the cap/body axis.
   Neck or surface contacts can roll it without retaining it. Repeated small

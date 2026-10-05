@@ -22,9 +22,13 @@ def _setup(context):
     repo = Path(LaunchConfiguration("repo_path").perform(context))
     moveit_dir = repo / "config" / "moveit"
     usb_port = LaunchConfiguration("usb_port").perform(context)
+    control_file = LaunchConfiguration("ros2_control_xacro_file").perform(context)
+    if not control_file:
+        control_file = str(description / "control" / "so_arm101.ros2_control.xacro")
     model = xacro.process_file(str(description / "urdf" / "so_arm101.urdf.xacro"),
                                mappings={"ros2_control_hardware_type": "real" if mode == "real" else "mock_components",
-                                         "usb_port": usb_port}).toxml()
+                                         "usb_port": usb_port,
+                                         "ros2_control_file": control_file}).toxml()
     params = {"robot_description": model,
               "robot_description_semantic": (moveit_dir / "so101.srdf").read_text(),
               "robot_description_kinematics": yaml.safe_load((moveit_dir / "kinematics.yaml").read_text()),
@@ -36,7 +40,8 @@ def _setup(context):
     nodes = [
         IncludeLaunchDescription(PythonLaunchDescriptionSource(str(controller_launch)),
                                  launch_arguments={"hardware_type": "real" if mode == "real" else "mock_components",
-                                                   "usb_port": usb_port}.items()),
+                                                   "usb_port": usb_port,
+                                                   "ros2_control_xacro_file": control_file}.items()),
         Node(package="moveit_ros_move_group", executable="move_group", parameters=[params], output="screen"),
         Node(package="kendra_robot", executable="kendra-robot-watchdog", output="screen"),
     ]
@@ -57,6 +62,8 @@ def generate_launch_description():
         DeclareLaunchArgument("mode", default_value="mock"),
         DeclareLaunchArgument("operator_enabled", default_value="false"),
         DeclareLaunchArgument("usb_port", default_value="/dev/LeRobotFollower"),
+        DeclareLaunchArgument("ros2_control_xacro_file", default_value="",
+                              description="Optional host-local control xacro with measured joint settings"),
         DeclareLaunchArgument("camera_config", default_value=""),
         DeclareLaunchArgument("repo_path", description="Absolute path of public repository checkout"),
         OpaqueFunction(function=_setup),

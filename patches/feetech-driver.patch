@@ -1,0 +1,294 @@
+diff --git a/feetech_driver/include/feetech_driver/communication_protocol.hpp b/feetech_driver/include/feetech_driver/communication_protocol.hpp
+index ebddf7b..00865f9 100644
+--- a/feetech_driver/include/feetech_driver/communication_protocol.hpp
++++ b/feetech_driver/include/feetech_driver/communication_protocol.hpp
+@@ -53,24 +53,16 @@ class CommunicationProtocol {
+          N}};
+     uint8_t checksum = buffer[2] + buffer[3] + buffer[4] + buffer[5] + buffer[6];
+ 
+-    return serial_port_->write(buffer)
+-        .and_then([&]() -> Result {
+-          for (size_t i = 0; i < ids.size(); ++i) {
+-            auto result = serial_port_->write(std::experimental::make_array(ids[i])).and_then([&] {
+-              return serial_port_->write(parameters[i]);
+-            });
+-            if (!result) {
+-              return tl::make_unexpected(
+-                  fmt::format("CommunicationProtocol::sync_write with [id={}, parameters={}]: [{}]",
+-                              ids[i],
+-                              parameters[i],
+-                              result.error()));
+-            }
+-            checksum += ids[i] + sum_bytes(parameters[i]);
+-          }
+-          return {};
+-        })
+-        .and_then([&] { return serial_port_->write(std::experimental::make_array(static_cast<uint8_t>(~checksum))); });
++    // Send one complete packet: fragmenting it creates unnecessary USB transfers.
++    std::vector<uint8_t> packet(buffer.begin(), buffer.end());
++    packet.reserve(buffer.size() + ids.size() * (N + 1) + 1);
++    for (size_t i = 0; i < ids.size(); ++i) {
++      packet.push_back(ids[i]);
++      packet.insert(packet.end(), parameters[i].begin(), parameters[i].end());
++      checksum += ids[i] + sum_bytes(parameters[i]);
++    }
++    packet.push_back(static_cast<uint8_t>(~checksum));
++    return serial_port_->write(packet);
+   }
+ 
+   /// TODO: Should I create a struct??
+@@ -160,15 +152,14 @@ class CommunicationProtocol {
+     buffer[0] = 0xff;
+     buffer[1] = 0xff;
+ 
+-    auto request_result = serial_port_->write(buffer).and_then([&]() -> Result {
+-      for (const uint8_t id : ids) {
+-        if (auto result = serial_port_->write(std::experimental::make_array(id)); !result) {
+-          return tl::make_unexpected(fmt::format("CommunicationProtocol::sync_read [{}]", result.error()));
+-        }
+-        request_checksum += id;
+-      }
+-      return serial_port_->write(std::experimental::make_array(static_cast<uint8_t>(~request_checksum)));
+-    });
++    std::vector<uint8_t> packet(buffer.begin(), buffer.end());
++    packet.reserve(buffer.size() + ids.size() + 1);
++    for (const uint8_t id : ids) {
++      packet.push_back(id);
++      request_checksum += id;
++    }
++    packet.push_back(static_cast<uint8_t>(~request_checksum));
++    auto request_result = serial_port_->write(packet);
+ 
+     if (!request_result) {
+       return request_result;
+@@ -183,7 +174,7 @@ class CommunicationProtocol {
+                              .and_then([&] { return serial_port_->read(&data->at(i)); })
+                              .and_then([&] { return serial_port_->read_byte(&checksum); });
+       if (!read_result) {
+-        return tl::make_unexpected(fmt::format("CommunicationProtocol::sync_read [{}]", read_result.error()));
++        return tl::make_unexpected(fmt::format("CommunicationProtocol::sync_read index={} expected_id={} -> {}", i, ids[i], read_result.error()));
+       }
+       const auto calculated_checksum = ~(sum_bytes(response_buffer) + sum_bytes(data->at(i)));
+       if (static_cast<std::byte>(calculated_checksum) != static_cast<std::byte>(checksum)) {
+@@ -235,7 +226,17 @@ class CommunicationProtocol {
+   /// @param parameters Additional control information that needs to be supplemented
+   template <std::size_t N>
+   Result write(const uint8_t id, const uint8_t memory_address, const std::array<uint8_t, N>& parameters) {
+-    return write_buffer(id, memory_address, parameters, kInstructionWrite).and_then([&] { return read_response(id); });
++    const auto started = std::chrono::steady_clock::now();
++    const auto result = write_buffer(id, memory_address, parameters, kInstructionWrite).and_then([&] { return read_response(id); });
++    const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
++    if (memory_address == SMS_STS_TORQUE_ENABLE) {
++      spdlog::info("servo_torque id={} value={} ack={} elapsed_ms={:.2f}", id, parameters[0], bool(result), elapsed);
++    }
++    if (!result) {
++      return tl::make_unexpected(fmt::format("servo_write id={} address={} bytes={} elapsed_ms={:.2f} -> {}",
++                                            id, memory_address, N, elapsed, result.error()));
++    }
++    return result;
+   }
+ 
+  private:
+diff --git a/feetech_driver/include/feetech_driver/serial_port.hpp b/feetech_driver/include/feetech_driver/serial_port.hpp
+index 2b5d5ec..c3eac08 100644
+--- a/feetech_driver/include/feetech_driver/serial_port.hpp
++++ b/feetech_driver/include/feetech_driver/serial_port.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include <fmt/core.h>
++#include <spdlog/spdlog.h>
+ #include <libserial/SerialPort.h>
+ 
+ #include <chrono>
+@@ -8,6 +9,7 @@
+ #include <feetech_driver/common.hpp>
+ #include <range/v3/all.hpp>
+ #include <string>
++#include <vector>
+ 
+ namespace feetech_driver {
+ 
+@@ -32,6 +34,7 @@ class SerialPort {
+   }
+ 
+   Result read_exact(uint8_t* dst, size_t n) {
++    const auto started = std::chrono::steady_clock::now();
+     try {
+       std::string s;
+       s.resize(n);
+@@ -40,7 +43,14 @@ class SerialPort {
+       std::memcpy(dst, s.data(), n);
+       return {};
+     } catch (const LibSerial::ReadTimeout& e) {
+-      return tl::make_unexpected(fmt::format("SerialPort::read_exact [{}]", e.what()));
++      const auto elapsed = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - started).count();
++      int queued = -1;
++      try { queued = port_.GetNumberOfBytesAvailable(); } catch (...) {}
++      std::string tx;
++      for (const char byte : last_tx_) { tx += fmt::format("{:02X} ", static_cast<unsigned char>(byte)); }
++      return tl::make_unexpected(fmt::format(
++          "SerialPort::read_exact expected_bytes={} timeout_ms={} elapsed_ms={:.2f} queued_bytes={} last_tx=[{}] error={}",
++          n, timeout_.count(), elapsed, queued, tx, e.what()));
+     } catch (const std::runtime_error& e) {
+       return tl::make_unexpected(fmt::format("SerialPort::read_exact [{}]", e.what()));
+     }
+@@ -55,7 +65,20 @@ class SerialPort {
+   Result write(const std::array<uint8_t, N>& buffer) {
+     return check_port().and_then([&]() -> Result {
+       try {
+-        port_.Write(std::string(buffer.begin(), buffer.end()));
++        last_tx_ = std::string(buffer.begin(), buffer.end());
++        port_.Write(last_tx_);
++      } catch (const std::runtime_error& e) {
++        return tl::make_unexpected(fmt::format("SerialPort::write [{}]", e.what()));
++      }
++      return {};
++    });
++  }
++
++  Result write(const std::vector<uint8_t>& buffer) {
++    return check_port().and_then([&]() -> Result {
++      try {
++        last_tx_ = std::string(buffer.begin(), buffer.end());
++        port_.Write(last_tx_);
+       } catch (const std::runtime_error& e) {
+         return tl::make_unexpected(fmt::format("SerialPort::write [{}]", e.what()));
+       }
+@@ -66,7 +89,8 @@ class SerialPort {
+  private:
+   [[nodiscard]] Result check_port() const noexcept;
+   std::string dev_;
+-  std::chrono::milliseconds timeout_ = std::chrono::milliseconds(5);
++  std::string last_tx_;
++  std::chrono::milliseconds timeout_ = std::chrono::milliseconds(20);
+   LibSerial::SerialPort port_;
+ };
+ }  // namespace feetech_driver
+diff --git a/feetech_driver/src/communication_protocol.cpp b/feetech_driver/src/communication_protocol.cpp
+index bd56b1d..82d1c7d 100644
+--- a/feetech_driver/src/communication_protocol.cpp
++++ b/feetech_driver/src/communication_protocol.cpp
+@@ -30,6 +30,10 @@ Result CommunicationProtocol::read_response(const uint8_t id) {
+     if (buffer[1] != 2) {
+       return tl::make_unexpected(fmt::format("buffer[1][={}] != 2", buffer[1]));
+     }
++    if (buffer[2] != 0) {
++      spdlog::warn("servo_ack id={} status=0x{:02X} raw=[{:02X} {:02X} {:02X} {:02X}]", id,
++                   buffer[2], buffer[0], buffer[1], buffer[2], buffer[3]);
++    }
+     const auto checksum = ~(buffer[0] + buffer[1] + buffer[2]);
+     if (static_cast<std::byte>(checksum) != static_cast<std::byte>(buffer[3])) {
+       return tl::make_unexpected(fmt::format(
+diff --git a/include/feetech_ros2_driver/feetech_ros2_driver.hpp b/include/feetech_ros2_driver/feetech_ros2_driver.hpp
+index 42a565d..1d81f5e 100644
+--- a/include/feetech_ros2_driver/feetech_ros2_driver.hpp
++++ b/include/feetech_ros2_driver/feetech_ros2_driver.hpp
+@@ -50,6 +50,7 @@ class FeetechHardwareInterface : public hardware_interface::SystemInterface {
+   std::vector<uint8_t> previous_hw_positions_;
+ 
+   std::vector<uint8_t> joint_ids_;
++  std::vector<double> position_offsets_;
+ 
+   CallbackReturn init_transport_();
+   CallbackReturn load_yaml_config_and_warn_(JointIdConfigMap& out_yaml);
+diff --git a/src/feetech_ros2_driver.cpp b/src/feetech_ros2_driver.cpp
+index af7ecd7..4d76ab7 100644
+--- a/src/feetech_ros2_driver.cpp
++++ b/src/feetech_ros2_driver.cpp
+@@ -1,6 +1,7 @@
+ #include <fmt/ranges.h>
+ 
+ #include <algorithm>
++#include <cmath>
+ #include <feetech_driver/common.hpp>
+ #include <feetech_driver/communication_protocol.hpp>
+ #include <feetech_ros2_driver/feetech_ros2_driver.hpp>
+@@ -108,6 +109,7 @@ CallbackReturn FeetechHardwareInterface::load_yaml_config_and_warn_(JointIdConfi
+ 
+ CallbackReturn FeetechHardwareInterface::configure_joints_(const JointIdConfigMap& yaml_by_id) {
+   joint_ids_.assign(info_.joints.size(), 0);
++  position_offsets_.assign(info_.joints.size(), 0.0);
+ 
+   for (size_t i = 0; i < info_.joints.size(); ++i) {
+     const auto& joint = info_.joints[i];
+@@ -130,6 +132,16 @@ CallbackReturn FeetechHardwareInterface::configure_joints_(const JointIdConfigMa
+       merged_params = JointParams(joint.parameters.begin(), joint.parameters.end());
+     }
+ 
++    // Software alignment: ROS angle = servo angle + position_offset_rad.
++    // This parameter does not alter servo EEPROM homing offsets or travel limits.
++    if (const auto it = merged_params.find("position_offset_rad"); it != merged_params.end()) {
++      position_offsets_[i] = std::stod(it->second);
++      if (!std::isfinite(position_offsets_[i])) {
++        spdlog::error("Joint '{}': position_offset_rad must be finite", joint_name);
++        return CallbackReturn::ERROR;
++      }
++    }
++
+     if (merged_params.find("offset") != merged_params.end()) {
+       spdlog::warn("Joint '{}': 'offset' param is deprecated and ignored — use 'homing_offset' instead", joint_name);
+     }
+@@ -194,13 +206,7 @@ CallbackReturn FeetechHardwareInterface::configure_joints_(const JointIdConfigMa
+       return CallbackReturn::ERROR;
+     }
+ 
+-    // Only enable torque for joints with command interfaces (Follower Arm)
+-    if (!joint.command_interfaces.empty()) {
+-      if (const auto result = communication_protocol_->set_torque(joint_ids_[i], true); !result) {
+-        spdlog::error("FeetechHardwareInterface::configure_joints_ set_torque -> {}", result.error());
+-        return CallbackReturn::ERROR;
+-      }
+-    }
++    // Leave torque disabled until activation seeds a current-position hold target.
+   }
+ 
+   return CallbackReturn::SUCCESS;
+@@ -267,7 +273,7 @@ hardware_interface::return_type FeetechHardwareInterface::read(const rclcpp::Tim
+     const auto& [index, readings] = values;
+     state_hw_positions_[index] = feetech_driver::to_radians(
+         feetech_driver::from_sts(feetech_driver::WordBytes{.low = readings[0], .high = readings[1]}) -
+-        feetech_driver::kStsMidpoint);
++        feetech_driver::kStsMidpoint) + position_offsets_[index];
+     state_hw_velocities_[index] = feetech_driver::to_radians(
+         feetech_driver::from_sts(feetech_driver::WordBytes{.low = readings[2], .high = readings[3]}));
+   });
+@@ -286,7 +292,8 @@ hardware_interface::return_type FeetechHardwareInterface::write(const rclcpp::Ti
+     // Only include joints with command interfaces
+     if (!info_.joints[i].command_interfaces.empty()) {
+       commanded_joint_ids.push_back(joint_ids_[i]);
+-      commanded_positions.push_back(feetech_driver::from_radians(hw_positions_[i]) + feetech_driver::kStsMidpoint);
++      commanded_positions.push_back(feetech_driver::from_radians(hw_positions_[i] - position_offsets_[i]) +
++                                    feetech_driver::kStsMidpoint);
+       commanded_speeds.push_back(2400);       // Default speed
+       commanded_accelerations.push_back(50);  // Default acceleration
+     }
+@@ -306,10 +313,25 @@ hardware_interface::return_type FeetechHardwareInterface::write(const rclcpp::Ti
+ }
+ 
+ CallbackReturn FeetechHardwareInterface::on_activate(const rclcpp_lifecycle::State& /* previous_state */) {
+-  // Time/Duration are not used
+-  read(rclcpp::Time{}, rclcpp::Duration::from_seconds(0));
+-  // Set the initial command to current joint positions
++  // Keep torque off until fresh feedback and a current-position hold target exist.
++  const auto now = rclcpp::Time{};
++  const auto period = rclcpp::Duration::from_seconds(0);
++  if (read(now, period) != hardware_interface::return_type::OK) {
++    return CallbackReturn::ERROR;
++  }
+   hw_positions_ = state_hw_positions_;
++  if (write(now, period) != hardware_interface::return_type::OK) {
++    return CallbackReturn::ERROR;
++  }
++  for (size_t i = 0; i < info_.joints.size(); ++i) {
++    if (!info_.joints[i].command_interfaces.empty()) {
++      if (const auto result = communication_protocol_->set_torque(joint_ids_[i], true); !result) {
++        spdlog::error("FeetechHardwareInterface::on_activate set_torque -> {}", result.error());
++        on_deactivate(rclcpp_lifecycle::State{});
++        return CallbackReturn::ERROR;
++      }
++    }
++  }
+   return CallbackReturn::SUCCESS;
+ }
+ 

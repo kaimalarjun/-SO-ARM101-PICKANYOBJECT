@@ -39,17 +39,15 @@ for item in 'ros2_so_arm e166df9d51f43b24da9b99047c6c51c306bda74f' \
   actual=$(git -C "$workspace/src/$dir" rev-parse HEAD)
   [[ $actual == "$expected" ]] || { echo "$dir is at $actual, expected $expected" >&2; exit 4; }
 done
-# The pinned Feetech driver uses a 5 ms serial read timeout. A short USB
-# scheduling delay can otherwise deactivate the controller on one missed read.
+# Apply the documented startup, serial diagnostics and angle-alignment fixes.
 driver_dir="$workspace/src/feetech_ros2_driver"
-for driver_patch in "$repo/patches/feetech-serial-timeout.patch" \
-                    "$repo/patches/feetech-startup-hold.patch"; do
-  if git -C "$driver_dir" apply --check "$driver_patch"; then
-    git -C "$driver_dir" apply "$driver_patch"
-  elif ! git -C "$driver_dir" apply --reverse --check "$driver_patch"; then
-    echo "Feetech patch cannot be applied or verified: $driver_patch" >&2; exit 5
-  fi
-done
+driver_patch="$repo/patches/feetech-driver.patch"
+if git -C "$driver_dir" apply --check "$driver_patch"; then
+  git -C "$driver_dir" apply "$driver_patch"
+elif ! git -C "$driver_dir" apply --reverse --check "$driver_patch"; then
+  echo 'Driver has partial or conflicting edits. Preserve them before updating the patch.' >&2
+  exit 5
+fi
 ln -sfn "$repo/ros" "$workspace/src/kendra_robot"
 cd "$workspace"
 rosdep install --from-paths \

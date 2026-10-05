@@ -24,6 +24,25 @@
 - Record joint-specific stalls/undertravel with load, pose, direction, targets,
   actual movement, and both camera views. Keep candidate contextual movement
   limits separate from confirmed mechanical travel limits.
+- After a failed motion, stuck joint, or slipped grasp, cancel the active command
+  and inspect fresh joint feedback and both cameras before retrying. Identify
+  whether the cause is contact, load sag, a travel limit, communication loss,
+  lost localization, or still uncertain. Do not keep pushing the failed target.
+- If feedback is healthy and the retreat path is visibly clear, reverse a small
+  part of the last successful movement toward the last known clear pose. Check
+  whether the joint responds and the obstruction clears before retreating further.
+  Use bounded coordinated movements; do not jump blindly to home or disable
+  torque where the arm or held object could fall. Human proximity, trapped cables,
+  missing feedback, or an uncertain retreat path require holding/stopping instead.
+- Record the failed target, measured pose and motion, load/grip state, camera
+  evidence, suspected cause, retreat attempted, and recovery outcome in ignored
+  host-local records. Add the observed obstacle, contextual limit, or failed grasp
+  region to the next plan so the same approach is not repeated unchanged. A single
+  failure does not prove a permanent mechanical limit or guarantee future avoidance.
+- After recovery, reacquire the objects and placement space, choose a revised
+  route, grasp, clearance, or motion profile, and test its first correction before
+  resuming the full goal. Count failed timed trials as unmet; keep the original
+  success criteria and record what changed between attempts.
 - Report a pick as successful only when camera evidence confirms the held object
   lifted off its support. Keep torque-on hold between actions to prevent folding.
 - Keep real poses, calibration, camera recordings, host/device identities, and

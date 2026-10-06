@@ -186,3 +186,7 @@
   around the attachment; lift the tip between disconnected strokes. Recalibrate
   if the paper, camera, robot base, or pencil mounting moves. Store real images,
   transforms, and stroke execution records only in ignored host-local files.
+- Current drawing setup: the operator taped the pen into the gripper, which must
+  remain fixed. Do not issue gripper open/close commands or reuse pickup routines
+  that actuate the gripper. Treat the pen as a fixed tool until the operator
+  explicitly confirms the tape has been removed and gripper operation restored.

@@ -168,3 +168,21 @@
   existing speed/feedback limits, and calculate duration from fresh joint travel.
   Use scene-specific image references: an old edge-grasp reference produced a
   false retention rejection after the center grasp changed the camera appearance.
+- Torque status must come from fresh motor-register readback when confirming
+  manual positioning. A ROS transition to inactive previously reported success
+  while motor torque registers remained enabled. Do not announce torque off or
+  display green from that lifecycle response alone. Support the arm before
+  disabling torque; verify all six registers are zero. Unknown/stale status is
+  amber. A read-only helper may open the bus only after ROS has closed it, and
+  must stop before ROS restarts. Never run two serial owners together.
+- USB camera device numbers can change after reconnecting. Check device identity
+  and capabilities before rebinding the preview; a camera that returns images
+  may now point at a different scene. Verify both current views before using
+  prior object localization, tabletop geometry, or arm clearance assumptions.
+- Drawing with an attached pencil requires a calibrated pencil-tip transform,
+  reachable paper boundary, paper-plane height, tool orientation, and a small
+  contact test. Claw coordinates and pickup poses do not describe the pencil tip.
+  Camera appearance alone does not measure contact force. Keep the gripper fixed
+  around the attachment; lift the tip between disconnected strokes. Recalibrate
+  if the paper, camera, robot base, or pencil mounting moves. Store real images,
+  transforms, and stroke execution records only in ignored host-local files.

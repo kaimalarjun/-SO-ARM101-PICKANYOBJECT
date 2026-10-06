@@ -245,3 +245,16 @@
   Preserve the existing feedback tolerance; do not infer a mechanical limit
   or exact drawing fidelity from these observations. Save stroke success before
   attempting the lift so a failed lift does not erase completed-stroke records.
+
+- Continuous drawing observation consumes the existing two MJPEG feeds; do not
+  open duplicate USB capture owners. Pair frame sequences and host timestamps
+  with actual ROS feedback. OpenCV forward/backward optical flow is a diagnostic,
+  not calibrated tip depth, contact pressure, or motion authorization. Host JPEG
+  timestamps are not hardware exposure timestamps. Keep recordings outside Git.
+- A serial read timeout deactivated the ROS hardware during camera-service
+  recovery. A lifecycle reactivation then received an unexpected serial reply.
+  The camera feeds remained fresh while joint feedback became stale; reject
+  motion in that state. The observed timing does not prove the camera restart
+  caused the timeout. Support the arm before restarting its sole ROS serial
+  owner, since shutdown/recovery may remove holding torque. Preserve the fixed
+  taped gripper and inspect both views after feedback returns.

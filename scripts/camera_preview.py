@@ -15,6 +15,7 @@ class Camera:
     def __init__(self, device):
         self.frame = None
         self.sequence = 0
+        self.timestamp = 0.0
         self.condition = threading.Condition()
         self.capture = cv2.VideoCapture(device, cv2.CAP_V4L2)
         self.capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
@@ -42,6 +43,7 @@ class Camera:
             if ok:
                 with self.condition:
                     self.frame = jpeg.tobytes()
+                    self.timestamp = time.time()
                     self.sequence += 1
                     self.condition.notify_all()
                 last_encode = now
@@ -83,6 +85,23 @@ def main():
                 self.end_headers()
                 self.wfile.write(body)
                 return
+            if path == "/camera-state":
+                data = {}
+                for name, camera in cameras.items():
+                    with camera.condition:
+                        age = time.time() - camera.timestamp
+                        data[name] = {"sequence": camera.sequence,
+                                      "timestamp": camera.timestamp,
+                                      "age_s": age,
+                                      "fresh": camera.frame is not None and age < .5}
+                body = json.dumps(data).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                self.wfile.write(body)
+                return
             if path.startswith('/snapshot/'):
                 camera = cameras.get(path.removeprefix('/snapshot/'))
                 if camera is None:
@@ -90,13 +109,16 @@ def main():
                     return
                 with camera.condition:
                     frame = camera.frame
-                if frame is None:
+                    timestamp, sequence = camera.timestamp, camera.sequence
+                if frame is None or time.time() - timestamp > .5:
                     self.send_error(503, 'Camera unavailable')
                     return
                 self.send_response(200)
                 self.send_header('Content-Type', 'image/jpeg')
                 self.send_header('Cache-Control', 'no-store')
                 self.send_header('Content-Length', str(len(frame)))
+                self.send_header('X-Frame-Timestamp', str(timestamp))
+                self.send_header('X-Frame-Sequence', str(sequence))
                 self.end_headers()
                 self.wfile.write(frame)
                 return
@@ -116,8 +138,11 @@ def main():
                         if camera.frame is None or camera.sequence == sequence:
                             return
                         frame, sequence = camera.frame, camera.sequence
+                        timestamp = camera.timestamp
                     self.wfile.write(b"--frame\r\nContent-Type: image/jpeg\r\nContent-Length: " +
-                                     str(len(frame)).encode() + b"\r\n\r\n" + frame + b"\r\n")
+                                     str(len(frame)).encode() + b"\r\nX-Frame-Timestamp: " +
+                                     str(timestamp).encode() + b"\r\nX-Frame-Sequence: " +
+                                     str(sequence).encode() + b"\r\n\r\n" + frame + b"\r\n")
                     self.wfile.flush()
             except (BrokenPipeError, ConnectionResetError):
                 pass

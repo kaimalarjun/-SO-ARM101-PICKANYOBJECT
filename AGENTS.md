@@ -220,3 +220,13 @@
   Prefer this verified shoulder-only lift for the unchanged attachment and setup;
   keep wrist and gripper targets fixed. Treat it as a setup-specific recovery,
   not calibrated pen-tip height. Verify actual separation before lateral travel.
+- Drawing commissioning produced faint test marks, but two small antenna-stroke
+  executions did not yield a clearly verifiable outline even after one bounded
+  contact-depth correction. A completed joint trajectory is not proof of ink or
+  graphite deposition. Lift and clear the view to inspect marks; verify the
+  writing tip works before increasing pressure or executing the entire image.
+  Keep motion success, visible-mark success, and reference fidelity separate.
+- Image-space tracing can omit filled pupils and short outline connections when
+  skeleton strokes are filtered too aggressively. Review the stroke preview,
+  retain short connections, and explicitly hatch compact filled regions before
+  mapping to robot motion. This preview does not validate physical drawing.

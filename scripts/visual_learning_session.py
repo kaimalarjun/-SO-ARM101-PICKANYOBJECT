@@ -252,6 +252,94 @@ class Session:
             self.lock.release()
 
 
+    def path(self, poses):
+        """Execute a checked arm-only stroke. Caller must verify paper geometry."""
+        self.ready()
+        if not isinstance(poses, list) or not 1 <= len(poses) <= 1000:
+            raise ValueError('Expected 1 to 1000 stroke points')
+        if not self.lock.acquire(blocking=False):
+            raise RuntimeError('Motion busy')
+        directory = self.args.records/(str(time.time_ns())+'-stroke')
+        directory.mkdir(parents=True, mode=0o700)
+        result = {'success': False}
+        try:
+            self.ready()
+            start = self.positions.copy()
+            previous = start.copy()
+            goal = FollowJointTrajectory.Goal()
+            goal.trajectory.joint_names = JOINTS[:-1]
+            initial = JointTrajectoryPoint()
+            initial.positions = [start[n] for n in JOINTS[:-1]]
+            initial.velocities = [0.0]*5
+            initial.accelerations = [0.0]*5
+            goal.trajectory.points.append(initial)
+            elapsed = 0.0
+            for item in poses:
+                values = item['positions']
+                if not values or any(n not in JOINTS[:-1] for n in values):
+                    raise ValueError('Stroke points accept arm joints only')
+                desired = previous.copy()
+                desired.update({n:float(v) for n,v in values.items()})
+                duration = float(item['duration'])
+                if not math.isfinite(duration) or duration < .15:
+                    raise ValueError('Invalid segment duration')
+                if max(abs(desired[n]-previous[n]) for n in JOINTS[:-1])*1.875/duration > .7:
+                    raise ValueError('Stroke exceeds peak speed bound')
+                for pose, slack in ((previous, 2), (desired, 0)):
+                    for n in JOINTS:
+                        ticks = pose[n]*4096/(2*math.pi)+2048
+                        cal = self.cal[n.removesuffix('_joint')]
+                        if not math.isfinite(ticks) or not cal['range_min']-slack <= ticks <= cal['range_max']+slack:
+                            raise ValueError('Stroke outside recorded travel')
+                for fraction in np.linspace(0,1,20):
+                    intermediate = {n:previous[n]+fraction*(desired[n]-previous[n]) for n in JOINTS}
+                    if claw_position(self.model,self.model_positions(intermediate))['z'] < self.args.minimum_claw_height:
+                        raise ValueError('Stroke violates clearance proxy')
+                elapsed += duration
+                if elapsed > 60:
+                    raise ValueError('Stroke exceeds command lease limit')
+                point = JointTrajectoryPoint()
+                point.positions = [desired[n] for n in JOINTS[:-1]]
+                point.velocities = [0.0]*5
+                point.accelerations = [0.0]*5
+                point.time_from_start.sec = int(elapsed)
+                point.time_from_start.nanosec = int((elapsed-int(elapsed))*1e9)
+                goal.trajectory.points.append(point)
+                previous = desired
+            for n in JOINTS[:-1]:
+                tolerance = JointTolerance();tolerance.name=n;tolerance.position=.025
+                goal.goal_tolerance.append(tolerance)
+            goal.goal_time_tolerance.sec = 1
+            self.capture(directory,'before')
+            self.ready()
+            handle = self.wait(self.arm.send_goal_async(goal),.75)
+            if not handle.accepted:
+                raise RuntimeError('Stroke rejected')
+            self.active=handle;self.command_deadline=time.monotonic()+elapsed+1.5;self.trace=[]
+            pending=handle.get_result_async()
+            while not pending.done() and time.monotonic()<self.command_deadline:
+                if self.latched or not self.fresh() or abs(self.positions['gripper_joint']-start['gripper_joint'])>.04:
+                    self.cancel();raise RuntimeError('Stroke feedback or fixed-gripper guard failed')
+                time.sleep(.02)
+            response=self.wait(pending,.2)
+            result.update(action_status=response.status,final=self.positions.copy(),duration=elapsed)
+            if response.status!=4 or any(abs(self.positions[n]-previous[n])>.025 for n in JOINTS[:-1]):
+                raise RuntimeError('Stroke endpoint not achieved')
+            result['success']=True
+            return result
+        except Exception as error:
+            if self.active is not None:self.active.cancel_goal_async()
+            result['error']=str(error)
+            raise
+        finally:
+            self.active=None
+            try:self.capture(directory,'after')
+            except Exception as error:result['capture_error']=str(error)
+            (directory/'result.json').write_text(json.dumps(result,indent=2))
+            (directory/'tracking.json').write_text(json.dumps(self.trace))
+            self.lock.release()
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--calibration',type=Path,required=True)
@@ -271,9 +359,11 @@ def main():
         def do_POST(self):
             try:
                 if self.path=='/stop':session.cancel();self.reply(session.state());return
-                if self.path not in ('/step','/pose'):self.reply({'error':'Unknown command'},404);return
+                if self.path not in ('/step','/pose','/path'):self.reply({'error':'Unknown command'},404);return
                 data=json.loads(self.rfile.read(int(self.headers.get('Content-Length','0'))))
-                if self.path=='/pose':
+                if self.path=='/path':
+                    self.reply(session.path(data['poses']))
+                elif self.path=='/pose':
                     session.ready()
                     deltas={n:float(v)-session.positions[n] for n,v in data['positions'].items()}
                     self.reply(session.step(deltas=deltas,duration=float(data['duration']),coordinated=True))

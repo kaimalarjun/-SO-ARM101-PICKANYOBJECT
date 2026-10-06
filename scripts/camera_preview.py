@@ -146,6 +146,7 @@ table{border-collapse:collapse;width:100%;font-size:10px}th,td{text-align:left;p
 
 </style>
 <h1>Robot preview</h1>
+<div id="torque" style="padding:7px 10px;margin-bottom:8px;border-radius:4px;font-size:12px;font-weight:bold;background:#805b00;color:white">TORQUE UNKNOWN · Do not move arm by hand</div>
 <div class="feeds">
 <section><h2>External camera</h2><div class="feed"><img src="/external"><div class="legend"><span class="x">X</span> · <span class="y">Y</span> · <span class="z">Z</span> — robot base axes; not aligned to this image</div></div></section>
 <section><h2>Wrist camera</h2><div class="feed"><img src="/wrist"><div class="legend">Camera moves with the wrist · image pixels are not robot coordinates</div></div></section>
@@ -166,14 +167,22 @@ document.querySelectorAll('.feeds img').forEach(img=>{
 });
 const names=['Base swivel','Shoulder lift','Elbow bend','Wrist bend','Wrist rotation','Claw opening'];
 const colors=['#ff6b6b','#ffad66','#ffdc70','#55dc89','#6aafff','#d49aff'];
+function torqueStatus(d){
+ const bar=document.getElementById('torque');
+ const off=d&&d.fresh&&d.torque_off===true;
+ const active=d&&d.fresh&&d.torque_off===false;
+ bar.style.background=off?'#16733a':active?'#b52222':'#805b00';
+ bar.textContent=off?'TORQUE OFF · Support arm before manual positioning':active?'TORQUE ACTIVE · Do not move arm by hand':'TORQUE UNKNOWN · Do not move arm by hand';
+}
 async function update(){
  try{
   const r=await fetch('/telemetry',{cache:'no-store'});const d=await r.json();
+  torqueStatus(d);
   for(const a of ['x','y','z'])document.getElementById(a).textContent=d.fresh&&d.xyz_m?d.xyz_m[a].toFixed(3)+' m':'—';
   document.getElementById('status').textContent=d.fresh?'Live encoder feedback · '+d.age_s.toFixed(2)+' s old · '+(d.torque_off?'motor torque off':'motor torque enabled')+(d.within_model_limits?'':' · outside provisional model bounds'):'Feedback unavailable or stale — coordinates hidden';
   const tbody=document.getElementById('joints');tbody.replaceChildren();
   if(d.fresh) d.joints.forEach((j,i)=>{const row=document.createElement('tr');[(i+1)+' · '+names[i],j.degrees.toFixed(1)+'°',j.normalized.toFixed(1)+(i===5?'%':''),j.ticks+' / '+j.range_min+'–'+j.range_max+(j.in_range?'':' (outside range)')].forEach((v,k)=>{const cell=document.createElement('td');cell.textContent=v;if(k===0)cell.style.color=colors[i];row.appendChild(cell)});tbody.appendChild(row)});
- }catch(e){for(const a of ['x','y','z'])document.getElementById(a).textContent='—';document.getElementById('status').textContent='Connection lost — coordinates hidden';document.getElementById('joints').replaceChildren()}
+ }catch(e){torqueStatus(null);for(const a of ['x','y','z'])document.getElementById(a).textContent='—';document.getElementById('status').textContent='Connection lost — coordinates hidden';document.getElementById('joints').replaceChildren()}
  setTimeout(update,200);
 }update();
 </script>'''

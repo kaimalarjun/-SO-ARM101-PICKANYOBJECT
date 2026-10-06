@@ -148,3 +148,23 @@
   separate from hypotheses, record unsuccessful trials honestly, and reuse the
   lesson when planning the next attempt. This is persistent procedural memory,
   not automatic model training or a guarantee against recurring failures.
+- For the tested rectangular box, a shallow edge grasp allowed rotation during
+  descent. Center the jaw gap on the body's middle, lower both fingers farther
+  along its sides without table contact, and verify retention with a short lift.
+  The deeper grasp and a staged return succeeded: first level the held box at an
+  airborne waypoint, then lower onto support. Direct high-to-table interpolation
+  previously produced rotation and a gripper-drift stop. Do not reuse this route
+  for another object or location without fresh localization and clearance checks.
+- An operator-demonstrated top pose is a measured reference, not a guarantee of
+  maximum reach. Verify powered tracking and retained payload with the wrist
+  camera when the external view cannot see the top. Save actual complete trial
+  time, including failures and verification; a sequence that finishes correctly
+  after the time limit has not met a timed goal.
+- With the deeper center grasp validated, direct coordinated returns also passed
+  on the unchanged scene. A local three-pick sequence finished just under its
+  time budget with camera checkpoints and retained the final payload at the top.
+  This was one trial with almost no timing margin, not reliable throughput.
+  Keep gripper contact errors separate from verified grasp success, preserve the
+  existing speed/feedback limits, and calculate duration from fresh joint travel.
+  Use scene-specific image references: an old edge-grasp reference produced a
+  false retention rejection after the center grasp changed the camera appearance.

@@ -230,3 +230,18 @@
   skeleton strokes are filtered too aggressively. Review the stroke preview,
   retain short connections, and explicitly hatch compact filled regions before
   mapping to robot motion. This preview does not validate physical drawing.
+
+- The operator subsequently confirmed the commissioning pen marks were visible.
+  Continue with bounded central-paper strokes and lifted transfers, retaining
+  fresh feedback checks. This confirms writing contact in this setup, not exact
+  picture fidelity or uniform pressure across the paper.
+
+- Central-paper drawing continued after the operator confirmed ink. Multiple
+  outlines executed, but pen-up transfers repeatedly showed shoulder endpoint
+  undertravel despite slower motion. Some rejected moves still lifted the tip;
+  inspect fresh images and measured positions before revising a transfer.
+  Small segmented lifts did not reliably resolve the error. A higher lift
+  cleared the paper in one tested pose, but did not eliminate later failures.
+  Preserve the existing feedback tolerance; do not infer a mechanical limit
+  or exact drawing fidelity from these observations. Save stroke success before
+  attempting the lift so a failed lift does not erase completed-stroke records.

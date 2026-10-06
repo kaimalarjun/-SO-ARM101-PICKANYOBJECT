@@ -212,3 +212,11 @@
   relevant lessons before the next attempt, change the failing approach, and
   verify that the correction worked. Distinguish observations from hypotheses;
   recorded lessons reduce recurrence but do not guarantee mistakes never repeat.
+- In the taped-pen setup, an attempted shoulder/elbow lift with wrist compensation
+  left an unintended line; predicted claw height did not prove pen clearance.
+  The operator requested lifting through the middle arm servo instead. A small
+  shoulder-only raise with wrist and gripper targets unchanged produced clearer
+  tip/shadow separation, and the operator confirmed the pen lifted off the paper.
+  Prefer this verified shoulder-only lift for the unchanged attachment and setup;
+  keep wrist and gripper targets fixed. Treat it as a setup-specific recovery,
+  not calibrated pen-tip height. Verify actual separation before lateral travel.

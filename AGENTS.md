@@ -258,3 +258,16 @@
   caused the timeout. Support the arm before restarting its sole ROS serial
   owner, since shutdown/recovery may remove holding torque. Preserve the fixed
   taped gripper and inspect both views after feedback returns.
+
+- The operator reported that pen drag/compliance can shorten the actual mark
+  relative to arm travel. Treat this as a hypothesis to measure with observed
+  pen-tip motion and ink length, not a fixed scale factor. Prefer a firm tool
+  mounting and a low-force writing tip; a sketch pen is a candidate, not a
+  guaranteed cure. Do not blindly extend strokes or press harder. Any tool
+  change invalidates the previous tip transform and contact-depth profile.
+- During a subsequent drawing trial, encoder-aligned targets completed several
+  additional strokes after unquantized transfers had narrowly failed. The driver
+  truncates radian requests to encoder steps; plan representable targets without
+  widening tracking tolerances. This result does not eliminate load sag, friction,
+  or contact uncertainty. The batch was canceled for a proposed tool change;
+  the tip was visibly raised and holding torque remained enabled.

@@ -190,3 +190,25 @@
   remain fixed. Do not issue gripper open/close commands or reuse pickup routines
   that actuate the gripper. Treat the pen as a fixed tool until the operator
   explicitly confirms the tape has been removed and gripper operation restored.
+- Drawing boundaries: every pencil-down segment, including any written label,
+  must stay inside the currently verified white paper with an inset margin that
+  accounts for tip/mapping uncertainty. Reject paths outside that boundary; stop
+  and recalibrate if the paper moves or its boundary becomes uncertain.
+- After drawing or an interrupted/stuck stroke, lift the pen to a verified clear
+  paper-change pose before continuing or inviting a paper change. If feedback is
+  lost, the arm is jammed, or lifting would worsen contact, cancel motion and
+  request physical recovery instead of forcing an upward move. Keep the taped
+  gripper fixed. Revalidate the paper plane and boundary after replacement.
+- Compare completed drawings with the reference after aligning/correcting their
+  image perspectives. Assess missing/extra strokes, proportions, placement,
+  contours, detail, line continuity, and the English object label. Record specific
+  discrepancies, causes with confidence, corrective actions, and evidence from
+  a follow-up check. Do not claim an exact replica from visual plausibility alone
+  or redraw blindly over errors. State physical/measurement limits honestly.
+- Identify the depicted object and name it in plain English; disclose ambiguity.
+  Report the name in the response and, when planning an on-paper label, reserve
+  space inside the white paper and include its strokes in the boundary checks.
+- Persist drawing failures and validated corrections as procedural memory. Read
+  relevant lessons before the next attempt, change the failing approach, and
+  verify that the correction worked. Distinguish observations from hypotheses;
+  recorded lessons reduce recurrence but do not guarantee mistakes never repeat.

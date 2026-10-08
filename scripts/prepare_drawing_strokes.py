@@ -39,7 +39,7 @@ def join_touching(strokes):
         paths.pop(j)
 
 
-def trace(image, min_area=50):
+def trace(image, min_area=50, simplify_px=.6):
     binary = (image < 128).astype(np.uint8) * 255
     count, labels, stats, _ = cv2.connectedComponentsWithStats(binary)
     clean = np.zeros_like(binary)
@@ -104,7 +104,15 @@ def trace(image, min_area=50):
                 previous, current = current, nxt
             if len(path) >= 2:
                 points = np.array([(x, y) for y, x in path], np.float32)
-                simplified = cv2.approxPolyDP(points, .6, False).reshape(-1, 2)
+                closed = path[0] == path[-1]
+                simplified = cv2.approxPolyDP(points, simplify_px, closed).reshape(-1, 2)
+                if closed:
+                    simplified = np.vstack([simplified, simplified[0]])
+                elif len(simplified) < 2:
+                    simplified = points[[0, -1]]
+                else:
+                    # Preserve graph junctions exactly so contour joins survive.
+                    simplified[0], simplified[-1] = points[0], points[-1]
                 strokes.append(simplified.tolist())
     return join_touching(strokes) + fills
 
@@ -119,12 +127,16 @@ def main():
                         help='Exclude a reviewed photograph border before tracing')
     parser.add_argument('--min-area', type=int, default=50,
                         help='Minimum connected ink component area in pixels')
+    parser.add_argument('--simplify-px', type=float, default=.6,
+                        help='Contour simplification tolerance; review preview before motion')
     args = parser.parse_args()
     image = cv2.imread(str(args.image), cv2.IMREAD_GRAYSCALE)
     if image is None:
         raise RuntimeError('Cannot read reference')
     if not 0 <= args.border_fraction < .2 or args.min_area < 1:
         parser.error('Invalid border fraction or component area')
+    if not 0 < args.simplify_px <= 5:
+        parser.error('--simplify-px must be greater than zero and at most five')
     working = image.copy()
     if args.adaptive:
         working = cv2.adaptiveThreshold(working, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
@@ -138,7 +150,7 @@ def main():
         if x:
             working[:, :x] = 255
             working[:, -x:] = 255
-    strokes = trace(working, args.min_area)
+    strokes = trace(working, args.min_area, args.simplify_px)
     # Reference-image label; robot mapping and boundary validation are separate.
     letters = [
         [[0,20],[0,0],[10,0],[10,10],[0,10],[10,20]],

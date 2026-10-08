@@ -77,3 +77,8 @@ This is an experimental image diagnostic: ink, shadows and tool edges can confus
 it. Missing or inconsistent candidates must not authorize contact or motion.
 Each newly recorded frame now has a `video_frame_index` in the observation log;
 use that index and its timestamp to inspect motion, rather than nominal AVI FPS.
+
+Use `--simplify-px` when preparing strokes to reduce redundant contour points.
+The default is 0.6 reference-image pixels. Inspect the generated preview before
+using a larger tolerance; graph junctions and closed contours are preserved.
+This reduces waypoint stops, but does not fix tool mounting or paper contact.

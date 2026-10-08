@@ -299,3 +299,13 @@
   Use the results to separate scale/mapping distortion from intermittent contact.
   Increase drawing size only after reach and full boundary checks; complete and
   inspect pupils and the label, then compare the whole result with the reference.
+
+- Try 2 started after the operator enabled it. ROS hold and a nominal 10 mm
+  straight test succeeded under the existing limits; the test used one continuous
+  three-second segment rather than stops at each tracing vertex. Ink remained
+  faint and short. Contact snapshots showed greater apparent shaft displacement
+  than nib displacement, consistent with drag/flex but not proof of its cause.
+  The nib still appeared ballpoint-like; confirm the tool before assuming a
+  felt-tip replacement. Do not enlarge strokes to compensate blindly. Verify
+  a low-force, firmly mounted tip and a continuous visible mark before continuing
+  the full picture. The arm finished the test with the pen visibly lifted.

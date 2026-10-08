@@ -337,3 +337,10 @@
   paper contact or calibrated motion. Pair each recorded video-frame index with
   its timestamp and feedback; nominal video FPS alone can misalign evidence when
   repeated/stale camera frames are skipped.
+- Raised-tool response checks showed that short joint commands and returns can
+  complete within tolerance while accumulating enough undertravel/drift to alter
+  tip clearance. Measure the actual return pose and inspect both views; a nominal
+  return is not restoration of the original tip height. In this trial a larger
+  bounded shoulder-only lift restored visible paper clearance. The colored-tip
+  diagnostic was too intermittent to calibrate a camera response matrix; retain
+  the recordings, reject that calibration and check the attachment/contact setup.

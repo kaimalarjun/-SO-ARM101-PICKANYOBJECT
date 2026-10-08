@@ -271,3 +271,17 @@
   widening tracking tolerances. This result does not eliminate load sag, friction,
   or contact uncertainty. The batch was canceled for a proposed tool change;
   the tip was visibly raised and holding torque remained enabled.
+
+- Operator review of the first drawing: too small, broken lines, nonsmooth
+  shapes, and unclear/unfilled eyes. The run was incomplete; missing eye strokes
+  must not be explained solely by friction. The nominal canvas was only about
+  30 by 40 mm, so joint quantization/tracking error was large relative to detail.
+  Improve by increasing size only within a newly verified reachable paper inset,
+  using continuous connected outlines and smooth time parameterization, validating
+  ink continuity, and completing bounded pupil hatching. Do not claim these
+  corrections succeeded until a physical drawing is compared with the reference.
+- A replacement sheet invalidates the previous paper boundary/plane. In the
+  reviewed replacement setup, the external view was too low to see all corners
+  and the wrist view mainly showed the tip. Reposition/recheck the camera or
+  obtain another reliable boundary measurement before expanding the drawing.
+  A warped sheet and tool contact require a new short stroke/contact check.

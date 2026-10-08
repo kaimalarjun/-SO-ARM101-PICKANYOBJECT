@@ -10,6 +10,35 @@ import cv2
 import numpy as np
 
 
+def join_touching(strokes):
+    """Join exact shared endpoints without adding a gap-spanning mark."""
+    paths = [list(path) for path in strokes if len(path) >= 2]
+    while True:
+        best = None
+        for i, left in enumerate(paths):
+            if np.allclose(left[0], left[-1], atol=1e-6, rtol=0):
+                continue
+            for j in range(i+1, len(paths)):
+                right = paths[j]
+                for flip_left in (False, True):
+                    a = left[::-1] if flip_left else left
+                    for flip_right in (False, True):
+                        b = right[::-1] if flip_right else right
+                        if not np.allclose(a[-1], b[0], atol=1e-6, rtol=0):
+                            continue
+                        incoming = np.asarray(a[-1])-a[-2]
+                        outgoing = np.asarray(b[1])-b[0]
+                        norm = np.linalg.norm(incoming)*np.linalg.norm(outgoing)
+                        score = float(incoming @ outgoing)/norm if norm else -1
+                        if best is None or score > best[0]:
+                            best = (score, i, j, a+b[1:])
+        if best is None:
+            return paths
+        _, i, j, merged = best
+        paths[i] = merged
+        paths.pop(j)
+
+
 def trace(image):
     binary = (image < 128).astype(np.uint8) * 255
     count, labels, stats, _ = cv2.connectedComponentsWithStats(binary)
@@ -21,10 +50,22 @@ def trace(image):
             continue
         clean[labels == i] = 255
         if width < 40 and height < 40 and area / (width * height) > .65:
+            hatch = []
             for row in range(y, y + height, 2):
                 xs = np.flatnonzero(labels[row] == i)
                 if len(xs) > 1:
-                    fills.append([[int(xs[0]), int(row)], [int(xs[-1]), int(row)]])
+                    line = [[int(xs[0]), int(row)], [int(xs[-1]), int(row)]]
+                    if hatch:
+                        if np.linalg.norm(np.asarray(hatch[-1])-line[-1]) < np.linalg.norm(np.asarray(hatch[-1])-line[0]):
+                            line.reverse()
+                        bridge = np.linspace(hatch[-1], line[0],
+                                             int(np.linalg.norm(np.asarray(hatch[-1])-line[0]))+2).round().astype(int)
+                        if not all(labels[v, u] == i for u, v in bridge):
+                            fills.append(hatch)
+                            hatch = []
+                    hatch.extend(line)
+            if hatch:
+                fills.append(hatch)
     binary = clean
     skeleton = cv2.ximgproc.thinning(binary)
     pixels = {tuple(p) for p in np.argwhere(skeleton > 0)}
@@ -65,7 +106,7 @@ def trace(image):
                 points = np.array([(x, y) for y, x in path], np.float32)
                 simplified = cv2.approxPolyDP(points, .6, False).reshape(-1, 2)
                 strokes.append(simplified.tolist())
-    return strokes + fills
+    return join_touching(strokes) + fills
 
 
 def main():

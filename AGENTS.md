@@ -353,3 +353,31 @@
   varied with movement direction, so a single fitted joint bias is not universal.
   External framing changed during the last check; recheck current paper bounds
   and invalidate old image coordinates before using the plan for a full drawing.
+- Lighter contact tests reduced tip pinning but missed ink in another part of the
+  canvas. A plane inferred from a heavily pressed pose was not a reliable gentle
+  contact plane. Locate first ink contact at several canvas locations and account
+  for measured tracking error; do not extrapolate one local contact height across
+  the whole paper or treat a camera/tool fit from raised poses as contact proof.
+  Bounded feedback corrections did not establish rectangle fidelity in this trial.
+- Generate and validate a new private motion plan successfully before executing
+  it. A failed generator must not fall through to an older on-disk plan; pair
+  execution with the intended plan version and current scene evidence.
+- Subsequent slow rectangle checks with a local contact-height correction and
+  bounded measured-point corrections produced a closed outline where previous
+  continuous passes produced partial marks. This is a local observed improvement,
+  not a validated paper-wide plane, circle accuracy, or completed robot drawing.
+  Recheck on replacement paper and keep contact tests distinct from final strokes.
+- Save point/stroke completion and errors incrementally, with a unique run and
+  plan identifier. Saving only at the batch end lost reliable progress after an
+  interrupted attempt. A recorder deadline or disconnected command session must
+  not turn a partially executed drawing into a completion report.
+- Replacement-paper checks produced connected rectangle sides and a recognizable,
+  nearly closed circle after local contact-height and bounded feedback corrections.
+  The circle still showed small gaps/bumps. A different canvas location initially
+  missed ink; a local cross-paper correction then produced a closed head outline.
+  Treat this as a local empirical contact profile, not a universally flat plane.
+- Current ink landmarks can help refresh a paper-plane command-to-image mapping
+  after framing changes. Fit residuals describe those landmarks, not absolute
+  physical accuracy, depth, force or accuracy outside their sampled region.
+  Include measured tracking/mapping uncertainty in the paper inset. Enlarge tiny
+  eyes and lettering only within the verified head/canvas bounds, and inspect ink.

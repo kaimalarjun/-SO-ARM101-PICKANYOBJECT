@@ -252,9 +252,11 @@ class Session:
             self.lock.release()
 
 
-    def path(self, poses):
+    def path(self, poses, continuous=False):
         """Execute a checked arm-only stroke. Caller must verify paper geometry."""
         self.ready()
+        if not isinstance(continuous, bool):
+            raise ValueError('continuous must be a boolean')
         if not isinstance(poses, list) or not 1 <= len(poses) <= 1000:
             raise ValueError('Expected 1 to 1000 stroke points')
         if not self.lock.acquire(blocking=False):
@@ -270,8 +272,9 @@ class Session:
             goal.trajectory.joint_names = JOINTS[:-1]
             initial = JointTrajectoryPoint()
             initial.positions = [start[n] for n in JOINTS[:-1]]
-            initial.velocities = [0.0]*5
-            initial.accelerations = [0.0]*5
+            if not continuous:
+                initial.velocities = [0.0]*5
+                initial.accelerations = [0.0]*5
             goal.trajectory.points.append(initial)
             elapsed = 0.0
             for item in poses:
@@ -300,8 +303,9 @@ class Session:
                     raise ValueError('Stroke exceeds command lease limit')
                 point = JointTrajectoryPoint()
                 point.positions = [desired[n] for n in JOINTS[:-1]]
-                point.velocities = [0.0]*5
-                point.accelerations = [0.0]*5
+                if not continuous:
+                    point.velocities = [0.0]*5
+                    point.accelerations = [0.0]*5
                 point.time_from_start.sec = int(elapsed)
                 point.time_from_start.nanosec = int((elapsed-int(elapsed))*1e9)
                 goal.trajectory.points.append(point)
@@ -322,7 +326,8 @@ class Session:
                     self.cancel();raise RuntimeError('Stroke feedback or fixed-gripper guard failed')
                 time.sleep(.02)
             response=self.wait(pending,.2)
-            result.update(action_status=response.status,final=self.positions.copy(),duration=elapsed)
+            result.update(action_status=response.status,final=self.positions.copy(),duration=elapsed,
+                          continuous=bool(continuous))
             if response.status!=4 or any(abs(self.positions[n]-previous[n])>.025 for n in JOINTS[:-1]):
                 raise RuntimeError('Stroke endpoint not achieved')
             result['success']=True
@@ -362,7 +367,7 @@ def main():
                 if self.path not in ('/step','/pose','/path'):self.reply({'error':'Unknown command'},404);return
                 data=json.loads(self.rfile.read(int(self.headers.get('Content-Length','0'))))
                 if self.path=='/path':
-                    self.reply(session.path(data['poses']))
+                    self.reply(session.path(data['poses'], data.get('continuous', False)))
                 elif self.path=='/pose':
                     session.ready()
                     deltas={n:float(v)-session.positions[n] for n,v in data['positions'].items()}

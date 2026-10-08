@@ -20,8 +20,12 @@ the paper plane. Keep a taped gripper fixed throughout drawing and recovery.
   [ViSP](https://github.com/lagadic/visp).
 - Let the existing ROS joint trajectory controller interpolate coordinated
   movements. Supplying zero velocity at every tracing waypoint makes the robot
-  stop at every waypoint. Future continuous strokes need checked derivatives and
-  time parameterization; do not simply remove fields or increase speed limits.
+  stop at every waypoint. The commissioning gateway offers an experimental
+  `continuous: true` path option using position-only linear interpolation. It
+  retains the segment speed, sampled workspace, lease and feedback checks.
+  This avoids programmed waypoint stops but does not guarantee continuous
+  velocity or acceleration at corners. Validate short strokes first; use checked
+  derivatives and time parameterization for a smoother trajectory.
   [ROS interpolation](https://control.ros.org/jazzy/doc/ros2_controllers/joint_trajectory_controller/doc/trajectory.html).
 
 ## Continuous observation
@@ -82,3 +86,14 @@ Use `--simplify-px` when preparing strokes to reduce redundant contour points.
 The default is 0.6 reference-image pixels. Inspect the generated preview before
 using a larger tolerance; graph junctions and closed contours are preserved.
 This reduces waypoint stops, but does not fix tool mounting or paper contact.
+
+Save drawing progress after each executed point or stroke, using a unique run
+directory and a hash of the validated local plan. Record requested and actual
+positions, timestamps, errors and camera evidence. Do not overwrite a completed
+stroke when its subsequent lift fails. A failed plan generator must block execution
+rather than reuse an older file. Restart only from explicitly reviewed progress.
+
+Contact height may vary across a canvas. A height estimated from a pressed pose
+or raised-tool fit is not a validated gentle-contact plane. Check perpendicular
+lines, a rectangle and a circle on the current paper; compare visible geometry
+and continuity. Keep direction-dependent tracking corrections local and bounded.

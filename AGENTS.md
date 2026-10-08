@@ -408,3 +408,7 @@
   connected contours, preserve ring/pupil separation, validate contact in each
   new reach region, and compare visible ink after each stage. Camera movement
   requires a new paper mapping before drawing on the other side.
+- A slower checked foot repair added ink density without restoring a clean boot
+  outline. Slower execution alone did not correct this region's drawing geometry.
+  Record the unsuccessful repair and avoid another unchanged overdraw; establish
+  local nib/contact mapping on a fresh patch before the next foot attempt.

@@ -344,3 +344,12 @@
   bounded shoulder-only lift restored visible paper clearance. The colored-tip
   diagnostic was too intermittent to calibrate a camera response matrix; retain
   the recordings, reject that calibration and check the attachment/contact setup.
+- The operator reported a rigid taped attachment and high contact friction.
+  Contact tests located faint dark ink; housing color did not establish ink color.
+  A straight pan line and a coordinated shoulder/elbow/wrist line became visible,
+  but rectangle/circle fidelity remained poor. Raising the planned contact plane
+  by 0.5 mm retained a visible short line in a fresh patch. This is a target
+  adjustment, not verified force or submillimetre physical accuracy. Joint error
+  varied with movement direction, so a single fitted joint bias is not universal.
+  External framing changed during the last check; recheck current paper bounds
+  and invalidate old image coordinates before using the plan for a full drawing.

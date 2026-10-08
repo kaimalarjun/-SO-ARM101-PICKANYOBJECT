@@ -95,6 +95,33 @@ class Flow:
         return result
 
 
+def colored_tip(frame, low, high, roi=None):
+    """Find a vertically elongated colored nib; diagnostic only, not contact."""
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    mask = cv2.inRange(hsv, np.array(low, dtype=np.uint8),
+                       np.array(high, dtype=np.uint8))
+    if roi is not None:
+        x0, y0, x1, y1 = roi
+        selected = np.zeros_like(mask)
+        selected[y0:y1, x0:x1] = mask[y0:y1, x0:x1]
+        mask = selected
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(mask)
+    candidates = []
+    for label in range(1, count):
+        x, y, w, h, area = stats[label]
+        if area < 80 or w < 8 or h < 12 or not 1.2*w <= h <= 6*w:
+            continue
+        # A dark shaft above the colored nib helps reject ink on the paper.
+        shaft = frame[max(0, y-20):y, x:x+w]
+        if not shaft.size or np.mean(np.max(shaft, axis=2) < 100) < .25:
+            continue
+        yy, xx = np.where(labels == label)
+        bottom = yy >= yy.max()-2
+        candidates.append([float(np.median(xx[bottom])), float(yy.max())])
+    return {'tip_candidate_px': candidates[0] if len(candidates) == 1 else None,
+            'tip_candidate_count': len(candidates)}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--camera-url', default='http://127.0.0.1:8765')
@@ -102,13 +129,20 @@ def main():
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--seconds', type=float, default=300,
                         help='Bounded recording duration; default five minutes')
+    parser.add_argument('--tip-hsv-low', type=int, nargs=3)
+    parser.add_argument('--tip-hsv-high', type=int, nargs=3,
+                        help='Optional external-camera nib color bounds; no depth inference')
+    parser.add_argument('--tip-roi', type=int, nargs=4,
+                        help='Optional external image rectangle x0 y0 x1 y1')
     args = parser.parse_args()
     if not 0 < args.seconds <= 1800:
         parser.error('--seconds must be between zero and 1800')
+    if (args.tip_hsv_low is None) != (args.tip_hsv_high is None):
+        parser.error('Supply both HSV bounds')
     args.output.mkdir(parents=True, mode=0o700)
     feeds = {name: Feed(args.camera_url+'/'+name) for name in ('external', 'wrist')}
     flows = {name: Flow() for name in feeds}
-    writers, seen = {}, {}
+    writers, seen, frame_counts = {}, {}, {}
     log = (args.output/'observations.jsonl').open('a')
     stopped = threading.Event()
     signal.signal(signal.SIGTERM, lambda *_: stopped.set())
@@ -134,7 +168,12 @@ def main():
                             if not writers[name].isOpened():
                                 raise RuntimeError('Cannot record '+name)
                         writers[name].write(frame)
+                        frame_counts[name] = frame_counts.get(name, 0)+1
+                        status['video_frame_index'] = frame_counts[name]-1
                         status.update(flows[name].update(frame))
+                        if name == 'external' and args.tip_hsv_low is not None:
+                            status.update(colored_tip(frame, args.tip_hsv_low,
+                                                      args.tip_hsv_high, args.tip_roi))
                         seen[name] = item['sequence']
                         cv2.imwrite(str(args.output/(name+'-latest.jpg')), frame)
                 row['cameras'][name] = status

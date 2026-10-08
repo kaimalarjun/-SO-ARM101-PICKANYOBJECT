@@ -70,3 +70,10 @@ When serial feedback disappears, hold/cancel and inspect the ROS hardware state.
 Camera streams do not substitute for motor feedback. A failed lifecycle recovery
 can leave torque status unknown. Support the arm before a controller restart that
 could remove holding torque; keep ROS as the sole follower serial owner.
+
+The observer can optionally log a colored, elongated nib candidate with
+`--tip-hsv-low H S V --tip-hsv-high H S V --tip-roi x0 y0 x1 y1`.
+This is an experimental image diagnostic: ink, shadows and tool edges can confuse
+it. Missing or inconsistent candidates must not authorize contact or motion.
+Each newly recorded frame now has a `video_frame_index` in the observation log;
+use that index and its timestamp to inspect motion, rather than nominal AVI FPS.

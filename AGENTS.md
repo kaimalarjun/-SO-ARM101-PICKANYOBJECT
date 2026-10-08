@@ -317,3 +317,23 @@
   smile. Inspect the rendered stroke plan against the original before blaming
   all missing details on motion. This fixes image-space planning, not physical
   ink continuity or tip calibration.
+
+- A longer sensitive felt-tip replacement invalidates the previous tool/contact
+  mapping. Keep the taped gripper fixed and use small contact corrections, not
+  extra pressure to darken ink. In the first replacement-tool trial purple marks
+  were visible, while rectangle/circle and head passes remained partial
+  or distorted despite successful controller completion. Motion success does
+  not establish ink continuity, shape fidelity, or correct tip height. Review
+  fresh ink evidence before repeating or extending the drawing.
+- The wrist view in this setup shows a grey finger more clearly than the actual
+  purple nib. Do not track that finger as the pen tip. Use the external view for
+  nib/ink evidence and the wrist view for clearance until actual tip visibility
+  is established. Reject a proposed drawing canvas that approaches a paper edge;
+  raised corner checks can reveal a reach-feasible plan is poorly placed.
+- A shorter supervised line-and-lift sequence completed in about seven seconds
+  under the existing speed/tolerance bounds, but its ink result remained poor.
+  Faster completion is not a drawing success. Color-only nib candidates were
+  ambiguous or inconsistent in some video frames; never use them as proof of
+  paper contact or calibrated motion. Pair each recorded video-frame index with
+  its timestamp and feedback; nominal video FPS alone can misalign evidence when
+  repeated/stale camera frames are skipped.

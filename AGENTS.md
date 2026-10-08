@@ -309,3 +309,11 @@
   felt-tip replacement. Do not enlarge strokes to compensate blindly. Verify
   a low-force, firmly mounted tip and a continuous visible mark before continuing
   the full picture. The arm finished the test with the pen visibly lifted.
+
+- Reviewing the original rectified reference revealed that an earlier binary
+  image omitted portions of the eye contours. Adaptive thresholding of the
+  photographed reference restored closed eye rings; reviewed border exclusion
+  and component filtering removed a glare artifact while retaining pupils and
+  smile. Inspect the rendered stroke plan against the original before blaming
+  all missing details on motion. This fixes image-space planning, not physical
+  ink continuity or tip calibration.

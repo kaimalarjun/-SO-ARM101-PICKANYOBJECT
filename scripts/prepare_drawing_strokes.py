@@ -39,14 +39,14 @@ def join_touching(strokes):
         paths.pop(j)
 
 
-def trace(image):
+def trace(image, min_area=50):
     binary = (image < 128).astype(np.uint8) * 255
     count, labels, stats, _ = cv2.connectedComponentsWithStats(binary)
     clean = np.zeros_like(binary)
     fills = []
     for i in range(1, count):
         x, y, width, height, area = stats[i]
-        if area < 50:
+        if area < min_area:
             continue
         clean[labels == i] = 255
         if width < 40 and height < 40 and area / (width * height) > .65:
@@ -113,11 +113,32 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--adaptive', action='store_true',
+                        help='Normalize photographed references with uneven lighting')
+    parser.add_argument('--border-fraction', type=float, default=0,
+                        help='Exclude a reviewed photograph border before tracing')
+    parser.add_argument('--min-area', type=int, default=50,
+                        help='Minimum connected ink component area in pixels')
     args = parser.parse_args()
     image = cv2.imread(str(args.image), cv2.IMREAD_GRAYSCALE)
     if image is None:
         raise RuntimeError('Cannot read reference')
-    strokes = trace(image)
+    if not 0 <= args.border_fraction < .2 or args.min_area < 1:
+        parser.error('Invalid border fraction or component area')
+    working = image.copy()
+    if args.adaptive:
+        working = cv2.adaptiveThreshold(working, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                       cv2.THRESH_BINARY, 31, 8)
+    if args.border_fraction:
+        h, w = working.shape
+        y, x = int(h*args.border_fraction), int(w*args.border_fraction)
+        if y:
+            working[:y] = 255
+            working[-y:] = 255
+        if x:
+            working[:, :x] = 255
+            working[:, -x:] = 255
+    strokes = trace(working, args.min_area)
     # Reference-image label; robot mapping and boundary validation are separate.
     letters = [
         [[0,20],[0,0],[10,0],[10,10],[0,10],[10,20]],

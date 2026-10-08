@@ -285,3 +285,17 @@
   and the wrist view mainly showed the tip. Reposition/recheck the camera or
   obtain another reliable boundary measurement before expanding the drawing.
   A warped sheet and tool contact require a new short stroke/contact check.
+
+- The operator supplied a clear full-sheet photo of the first attempt. It shows
+  a small drawing low in the bounded region, disconnected head/body/limb contours,
+  distorted proportions, and no visible eyes or English label. Uneven ink density
+  is observed; drag, tool flex, varying contact, and tracking error remain candidate
+  causes. The eye/label stages had not executed, so their absence is also an
+  execution-completeness failure. Stray marks exist; attribution of every mark
+  is uncertain. Do not call this an adequate replica or infer a single scale fix.
+- Before the next full drawing, validate a short horizontal and vertical line,
+  a rectangle, and a circle within the newly checked paper inset. Compare visible
+  ink lengths, continuity, aspect ratio, closure, and curvature with intended paths.
+  Use the results to separate scale/mapping distortion from intermittent contact.
+  Increase drawing size only after reach and full boundary checks; complete and
+  inspect pupils and the label, then compare the whole result with the reference.

@@ -381,3 +381,30 @@
   physical accuracy, depth, force or accuracy outside their sampled region.
   Include measured tracking/mapping uncertainty in the paper inset. Enlarge tiny
   eyes and lettering only within the verified head/canvas bounds, and inspect ink.
+- A position-only interpolated body contour completed under the controller gates
+  but produced a flattened, incomplete ink shape. The candidate rigid-tool model
+  showed substantial joint motion; that did not prove nib motion. A lighter local
+  target and slower measured-point pass restored a closed torso. Their combined
+  improvement does not isolate pressure, compliance, model error or timing as the
+  sole cause. Verify each new reach region before using it for fine drawing.
+- Repeated corrections that recompute every command from the original target can
+  undo a prior correction on joints already aligned. In this trial the second
+  correction often worsened measured error. Remove unjustified repetitions;
+  preserve aligned joints and bound any cumulative correction and total offset.
+- Check optional correction targets against encoder travel with an inset, not
+  just the original IK pose. A label correction reached the wrist boundary and was
+  rejected; the arm had already reached its first point. Include approach/contact
+  positioning inside the recovery try/finally and record partial progress before
+  lifting. A rejected correction does not imply that no earlier motion occurred.
+- A far-canvas label produced a dot rather than a letter despite successful joint
+  motions. Do not repeat that path unchanged or call a completed stroke readable
+  text. Lift, record the failed region and move the caption to a currently checked
+  writable inset when authorized. Recheck mapping/contact after camera or paper
+  changes before a later drawing; retain the reference and completed-run evidence.
+- Review of the larger drawing showed closed head/torso outlines and filled pupils,
+  but eye rings lost white space, limb/boot connections remained incomplete, and
+  repeated failed passes left extra marks. These are separate fidelity failures;
+  controller completion does not erase them. Before the next drawing, simplify
+  connected contours, preserve ring/pupil separation, validate contact in each
+  new reach region, and compare visible ink after each stage. Camera movement
+  requires a new paper mapping before drawing on the other side.

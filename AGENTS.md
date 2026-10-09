@@ -412,3 +412,14 @@
   outline. Slower execution alone did not correct this region's drawing geometry.
   Record the unsuccessful repair and avoid another unchanged overdraw; establish
   local nib/contact mapping on a fresh patch before the next foot attempt.
+- A later same-reference retry used a fresh paper mapping, wider proportions and
+  smaller pupils, but physical eye/limb strokes and lettering remained distorted.
+  The wrist view also showed flattening, so external perspective alone did not
+  explain it. A slower checked eye pass and a lighter local head pass did not
+  establish better fidelity. Record these as failed corrections, not improvements.
+- A fresh-patch short contact line deposited ink, but both a constant-height
+  rectangle and a bounded reach-dependent depth correction produced partial
+  V-shaped marks. One visible line is insufficient to validate a drawing plane.
+  Keep the pen lifted after failed contact checks, obtain a clear view of the
+  actual nib and paper, and resolve local tool/contact mapping before another
+  full drawing. Do not extend strokes or deepen contact blindly to hide the error.
